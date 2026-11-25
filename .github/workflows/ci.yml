@@ -94,11 +94,9 @@ jobs:
           path: ${{ runner.temp }}/frontend-dist.tar.gz
           retention-days: 7
 
-  # TODO: make blocking once the existing ESLint errors are fixed
   frontend-lint:
     name: Frontend lint
     runs-on: ubuntu-latest
-    continue-on-error: true
     defaults:
       run:
         working-directory: frontend
@@ -115,7 +113,6 @@ jobs:
   deploy:
     name: Deploy
     needs: [backend-test, backend-build, frontend, frontend-lint]
-    # Lint is continue-on-error, so its result may be failure. env is not available on environment.url.
     if: >-
       !cancelled()
       && github.event_name != 'pull_request'
@@ -123,7 +120,7 @@ jobs:
       && needs['backend-test'].result == 'success'
       && needs['backend-build'].result == 'success'
       && needs.frontend.result == 'success'
-      && (needs['frontend-lint'].result == 'success' || needs['frontend-lint'].result == 'failure')
+      && needs['frontend-lint'].result == 'success'
     runs-on: ubuntu-latest
     environment:
       name: production

@@ -1,5 +1,7 @@
 import vuetify from 'eslint-config-vuetify'
 
-export default vuetify({
-  ts: true,
-})
+// frontend/old is the original prototype, not the Vue app.
+export default vuetify({ ts: true }).then(config => [
+  { ignores: ['old/**'] },
+  ...config,
+])
