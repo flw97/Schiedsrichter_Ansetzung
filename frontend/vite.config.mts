@@ -1,6 +1,5 @@
 import { fileURLToPath, URL } from 'node:url'
 import Vue from '@vitejs/plugin-vue'
-import Fonts from 'unplugin-fonts/vite'
 import { defineConfig } from 'vite'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 
@@ -11,23 +10,7 @@ export default defineConfig({
       template: { transformAssetUrls },
     }),
     // https://github.com/vuetifyjs/vuetify-loader/tree/master/packages/vite-plugin#readme
-    Vuetify({
-      autoImport: true,
-      styles: {
-        configFile: 'src/styles/settings.scss',
-      },
-    }),
-    Fonts({
-      fontsource: {
-        families: [
-          {
-            name: 'Roboto',
-            weights: [100, 300, 400, 500, 700, 900],
-            styles: ['normal', 'italic'],
-          },
-        ],
-      },
-    }),
+    Vuetify({ autoImport: true }),
   ],
   define: { 'process.env': {} },
   resolve: {
@@ -46,5 +29,8 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    proxy: {
+      '/api': process.env.API_PROXY_TARGET ?? 'http://localhost:8080',
+    },
   },
 })

@@ -1,0 +1,11 @@
+/* Typografie des Prototyps: Fraunces für Überschriften, Inter für Text, IBM Plex Mono für Zahlen */
+.v-application { font-family: 'Inter', system-ui, sans-serif; }
+.font-display { font-family: 'Fraunces', Georgia, serif !important; font-weight: 500; letter-spacing: 0; }
+.font-mono { font-family: 'IBM Plex Mono', monospace !important; }
+.text-soft { color: rgb(var(--v-theme-on-surface-variant)); }
+.text-amber { color: #7A5214; }
+.gap-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.list-gap > * + * { margin-top: 10px; }
+.max-w-sm { max-width: 460px; }
+.max-w-md { max-width: 760px; }
+.max-w-lg { max-width: 1000px; }

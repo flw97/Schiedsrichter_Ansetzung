@@ -1,0 +1,67 @@
+# Local development environment with hot reload.
+#   docker compose up --build
+# Frontend (Vite dev server): http://localhost:3000
+# Backend  (Laravel/Apache):  http://localhost:8080 (also proxied via http://localhost:3000/api)
+# MariaDB:                    localhost:3306 (credentials below)
+
+services:
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    # Install deps inside the container (native modules like sass-embedded must match the container OS),
+    # then start the Vite dev server reachable from the host.
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "3000:3000"
+    environment:
+      API_PROXY_TARGET: http://backend
+    volumes:
+      - ./frontend:/app
+      # Keep container node_modules separate from the host's node_modules
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    # Sync vendor/ with composer.lock and apply pending migrations on every start
+    command: sh -c "composer install --no-interaction --no-progress && php artisan migrate --force && apache2-foreground"
+    ports:
+      - "8080:80"
+    env_file:
+      - ./backend/.env.development
+    environment:
+      # Run Apache as the host user so Laravel can write to the bind-mounted storage/
+      APACHE_RUN_USER: "#${UID:-1000}"
+      APACHE_RUN_GROUP: "#${GID:-1000}"
+    volumes:
+      # PHP is interpreted per request, so bind-mounting the source gives instant reload
+      - ./backend:/var/www/html
+      # Keep container vendor/ separate from the host
+      - backend_vendor:/var/www/html/vendor
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:11.8
+    ports:
+      - "3306:3306"
+    environment:
+      # Must match DB_* in backend/.env.development
+      MARIADB_DATABASE: schiedsrichter
+      MARIADB_USER: schiedsrichter
+      MARIADB_PASSWORD: schiedsrichter
+      MARIADB_ROOT_PASSWORD: root
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  frontend_node_modules:
+  backend_vendor:
+  db_data:

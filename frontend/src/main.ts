@@ -1,20 +1,18 @@
 /**
  * main.ts
  *
- * Bootstraps Vuetify and other plugins then mounts the App`
+ * Bootstraps Vuetify and other plugins then mounts the App
  */
 
-// Composables
 import { createApp } from 'vue'
-
-// Plugins
 import { registerPlugins } from '@/plugins'
-
-// Components
 import App from './App.vue'
-
-// Styles
-import 'unfonts.css'
+import '@fontsource/fraunces/500.css'
+import '@fontsource/inter/400.css'
+import '@fontsource/inter/500.css'
+import '@fontsource/inter/600.css'
+import '@fontsource/ibm-plex-mono/400.css'
+import './styles/main.css'
 
 const app = createApp(App)
 

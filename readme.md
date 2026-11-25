@@ -50,28 +50,43 @@ Wer Schiedsrichter für einen Spieltag ansetzt, koordiniert oft per Excel-Liste,
 
 ## Tech-Stack
 
-_Wird noch festgelegt._
+- Frontend: Vue 3, Vite, Vuetify
+- Backend: Laravel 13 (PHP 8.4)
+- Datenbank: MariaDB
 
 ## Installation & Start
 
-_Folgt, sobald die erste lauffähige Version vorliegt._
+Lokale Entwicklungsumgebung mit Hot Reload (Docker erforderlich):
 
 ```bash
 git clone <repository-url>
 cd Schiedsrichter_Ansetzung
-# weitere Schritte folgen
+docker compose up --build
 ```
+
+- Frontend (Vue/Vuetify): http://localhost:3000
+- Backend (Laravel): http://localhost:8080 – im Frontend über `/api/...` erreichbar (Vite-Proxy)
+- Datenbank (MariaDB): `localhost:3306`, Datenbank/Benutzer/Passwort `schiedsrichter`
+
+Demo-Daten laden und anmelden (Passwort `demo1234`; Konten `m.hartmann` Master-Admin, `s.weber` Admin, `t.lang` Lesend, `k.rehberg` Schiedsrichter):
+
+```bash
+docker compose exec backend php artisan migrate:fresh --seed
+```
+
+Tests: `docker compose exec backend php artisan test`, im Frontend `npm test`, `npm run lint`, `npm run build`.
 
 ## Roadmap
 
-- [ ] Tech-Stack festlegen
-- [ ] Datenmodell (Spieltag, Spiel, Schiedsrichter, Ansetzung)
-- [ ] Verwaltung von Schiedsrichtern
-- [ ] Verwaltung von Spieltagen und Spielen
-- [ ] Ansetzungen erstellen und bearbeiten
-- [ ] Konfliktprüfung
+- [x] Tech-Stack festlegen
+- [x] Datenmodell (Spieltag, Spiel, Schiedsrichter, Ansetzung)
+- [x] Verwaltung von Schiedsrichtern
+- [x] Verwaltung von Spieltagen und Spielen
+- [x] Ansetzungen erstellen und bearbeiten
+- [x] Konfliktprüfung
+- [ ] Anbindung NuLiga (aktuell simuliert)
 - [ ] Export der Ansetzungsübersicht
-- [ ] Benachrichtigungen
+- [ ] Benachrichtigungen (Push-Versand; aktuell nur in der App)
 
 ## Mitwirken
 
