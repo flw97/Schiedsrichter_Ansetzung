@@ -145,19 +145,8 @@ jobs:
           tar -xzf "$RUNNER_TEMP/backend-build/backend-build.tar.gz" -C backend
           tar -xzf "$RUNNER_TEMP/frontend-dist/frontend-dist.tar.gz" -C frontend
       - run: sudo apt-get update && sudo apt-get install -y lftp
-      - name: Production env file
-        env:
-          PRODUCTION_ENV_CONTENT: ${{ secrets.PRODUCTION_ENV }}
-        run: |
-          if [ -z "$PRODUCTION_ENV_CONTENT" ]; then
-            echo "Repository secret PRODUCTION_ENV is empty."
-            exit 1
-          fi
-          umask 077
-          printf '%s\n' "$PRODUCTION_ENV_CONTENT" > "$RUNNER_TEMP/.env.production"
       - name: Upload release
         env:
           FTP_USER: ${{ secrets.FTP_USER }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          PRODUCTION_ENV: ${{ runner.temp }}/.env.production
         run: sh deploy/ftp-deploy.sh

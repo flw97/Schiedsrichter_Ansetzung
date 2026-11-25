@@ -1,11 +1,27 @@
-# Document root of the vhost is the app folder. Every request is served from public/,
-# so .env.production, storage/, vendor/ and the other app folders are never reachable.
-# APP_ENV makes Laravel load .env.production (see LoadEnvironmentVariables).
+# Document root is the built frontend (index.html, assets). The Laravel app lives in api/.
+# Requests under /api and /up run api/public/index.php. Nothing else in api/ is served as a file,
+# so .env.production, storage/ and vendor/ stay unreachable.
 SetEnv APP_ENV production
 
-DirectoryIndex index.html index.php
+DirectoryIndex index.html
+Options -Indexes
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^(.*)$ public/$1 [L]
+
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # One-off deploy hook and Laravel's front controller.
+    RewriteCond %{DOCUMENT_ROOT}/api/public/$1 -f
+    RewriteRule ^api/public/(.*)$ api/public/$1 [L]
+
+    RewriteRule ^api(?:/|$) api/public/index.php [QSA,L]
+    RewriteRule ^up/?$ api/public/index.php [QSA,L]
+
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    RewriteRule ^ index.html [L]
 </IfModule>
