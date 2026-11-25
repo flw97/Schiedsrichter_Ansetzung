@@ -1,5 +1,8 @@
 # Document root of the vhost is the app folder. Every request is served from public/,
-# so .env, storage/, vendor/ and the other app folders are never reachable.
+# so .env.production, storage/, vendor/ and the other app folders are never reachable.
+# APP_ENV makes Laravel load .env.production (see LoadEnvironmentVariables).
+SetEnv APP_ENV production
+
 DirectoryIndex index.html index.php
 
 <IfModule mod_rewrite.c>

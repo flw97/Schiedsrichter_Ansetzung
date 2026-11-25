@@ -4,7 +4,7 @@
 - Frontend calls the backend via relative `/api/...` URLs; Vite proxies them (`frontend/vite.config.mts`, target from `API_PROXY_TARGET`, `http://backend` in compose). No CORS needed in dev.
 - Hot reload: both source dirs are bind-mounted. Vite HMR for the frontend; PHP is re-read per request.
 - `frontend/node_modules` in the container is a named volume (`frontend_node_modules`), separate from the host's. After changing `package.json`, restart the `frontend` service (`npm ci` runs on start).
-- Backend env vars: `backend/.env.development` (loaded via `env_file`, no `.env` file needed). DB credentials there must match the `db` service in `docker-compose.yaml`.
+- Backend env vars: `backend/.env.development` (loaded via `env_file`, no `.env` file needed). DB credentials there must match the `db` service in `docker-compose.yaml`. `backend/.env.production` is gitignored and is not loaded while `APP_ENV=local`.
 - Backend start command runs `composer install` and `php artisan migrate --force`, then Apache. `vendor/` lives in the named volume `backend_vendor`; after changing `composer.json` restart the `backend` service.
 - Apache runs as `UID`/`GID` (default 1000) so Laravel can write to the bind-mounted `storage/`. Logs go to stderr (`docker compose logs backend`).
 - Artisan/tests: `docker compose exec backend php artisan ...`, `docker compose exec backend php artisan test`, lint with `docker compose exec backend vendor/bin/pint`.

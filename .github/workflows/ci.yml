@@ -1,0 +1,163 @@
+# Test, build and deploy to the Netcup webspace via FTPS.
+# Release script: deploy/ftp-deploy.sh. Setup: docs/deployment.md
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: write
+
+env:
+  FTP_HOST: hosting256340.ae92d.netcup.net
+  FTP_PATH: /ansetzung
+  APP_URL: https://ansetzung.badminton-gomaringen.de
+
+jobs:
+  backend-test:
+    name: Backend test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, xml, curl, zip, bcmath, intl, pdo_sqlite
+          coverage: none
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ runner.os }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+      - run: composer install --no-interaction --no-progress
+        env:
+          COMPOSER_CACHE_DIR: ~/.cache/composer
+      - run: vendor/bin/pint --test
+      - run: php artisan test
+
+  backend-build:
+    name: Backend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: none
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ runner.os }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+      - run: composer install --no-dev --no-interaction --no-progress --optimize-autoloader
+        env:
+          COMPOSER_CACHE_DIR: ~/.cache/composer
+      # vendor/ is gitignored; a tarball keeps package-discovery files in bootstrap/cache too
+      - run: tar -czf "$RUNNER_TEMP/backend-build.tar.gz" vendor bootstrap/cache
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-build
+          path: ${{ runner.temp }}/backend-build.tar.gz
+          retention-days: 7
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: tar -czf "$RUNNER_TEMP/frontend-dist.tar.gz" dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: ${{ runner.temp }}/frontend-dist.tar.gz
+          retention-days: 7
+
+  # TODO: make blocking once the existing ESLint errors are fixed
+  frontend-lint:
+    name: Frontend lint
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+
+  deploy:
+    name: Deploy
+    needs: [backend-test, backend-build, frontend, frontend-lint]
+    # Lint is continue-on-error, so its result may be failure. env is not available on environment.url.
+    if: >-
+      !cancelled()
+      && github.event_name != 'pull_request'
+      && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+      && needs['backend-test'].result == 'success'
+      && needs['backend-build'].result == 'success'
+      && needs.frontend.result == 'success'
+      && (needs['frontend-lint'].result == 'success' || needs['frontend-lint'].result == 'failure')
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://ansetzung.badminton-gomaringen.de
+    # Queued deploys replace each other; the running upload is left alone so a cancel cannot leave maintenance mode half-applied.
+    concurrency:
+      group: production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-build
+          path: ${{ runner.temp }}/backend-build
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: ${{ runner.temp }}/frontend-dist
+      - run: |
+          tar -xzf "$RUNNER_TEMP/backend-build/backend-build.tar.gz" -C backend
+          tar -xzf "$RUNNER_TEMP/frontend-dist/frontend-dist.tar.gz" -C frontend
+      - run: sudo apt-get update && sudo apt-get install -y lftp
+      - name: Production env file
+        env:
+          PRODUCTION_ENV_CONTENT: ${{ secrets.PRODUCTION_ENV }}
+        run: |
+          if [ -z "$PRODUCTION_ENV_CONTENT" ]; then
+            echo "Repository secret PRODUCTION_ENV is empty."
+            exit 1
+          fi
+          umask 077
+          printf '%s\n' "$PRODUCTION_ENV_CONTENT" > "$RUNNER_TEMP/.env.production"
+      - name: Upload release
+        env:
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          PRODUCTION_ENV: ${{ runner.temp }}/.env.production
+        run: sh deploy/ftp-deploy.sh

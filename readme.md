@@ -67,6 +67,7 @@ docker compose up --build
 - Frontend (Vue/Vuetify): http://localhost:3000
 - Backend (Laravel): http://localhost:8080 – im Frontend über `/api/...` erreichbar (Vite-Proxy)
 - Datenbank (MariaDB): `localhost:3306`, Datenbank/Benutzer/Passwort `schiedsrichter`
+- Produktion: https://ansetzung.badminton-gomaringen.de — Deploy über GitHub Actions, siehe [docs/deployment.md](docs/deployment.md)
 
 Demo-Daten laden und anmelden (Passwort `demo1234`; Konten `m.hartmann` Master-Admin, `s.weber` Admin, `t.lang` Lesend, `k.rehberg` Schiedsrichter):
 

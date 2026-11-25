@@ -4,7 +4,7 @@
 # The app is in maintenance mode from upload until deploy/post-deploy.php has run migrations.
 set -eu
 : "${FTP_HOST:?}" "${FTP_USER:?}" "${FTP_PASSWORD:?}" "${FTP_PATH:?}" "${APP_URL:?}"
-: "${PRODUCTION_ENV:?file variable with the production backend .env}"
+: "${PRODUCTION_ENV:?path to the production backend .env.production}"
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 release=$(mktemp -d)
@@ -36,8 +36,11 @@ EOF
 ftp "
 mirror -R --only-missing --no-perms $release/storage $FTP_PATH/storage
 put $down -o $FTP_PATH/storage/framework/down
-put $PRODUCTION_ENV -o $FTP_PATH/.env
-mirror -R --delete --no-perms --parallel=8 --exclude '^storage/' --exclude '^\.env\$' $release $FTP_PATH
+put $PRODUCTION_ENV -o $FTP_PATH/.env.production
+set cmd:fail-exit no
+rm $FTP_PATH/.env
+set cmd:fail-exit yes
+mirror -R --delete --no-perms --parallel=8 --exclude '^storage/' --exclude '^\.env\.production$' $release $FTP_PATH
 "
 
 status=0
