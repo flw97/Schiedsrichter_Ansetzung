@@ -31,6 +31,9 @@ ftp() {
 set cmd:fail-exit yes
 set ftp:ssl-force yes
 set ftp:ssl-protect-data yes
+set ssl:verify-certificate yes
+# Certificate is *.netcup.net; the account lives on hosting….ae92d.netcup.net.
+set ssl:check-hostname no
 set net:max-retries 3
 $1
 EOF
