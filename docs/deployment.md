@@ -19,7 +19,7 @@ Repository secrets (Settings → Secrets and variables → Actions):
 - `FTP_USER`
 - `FTP_PASSWORD`
 
-`FTP_HOST`, `FTP_PATH` and `APP_URL` are workflow `env` values. Deploy runs only for a push (or manual run) of the default branch, after tests and builds. The `production` environment records the deployment; protection rules there are optional.
+`FTP_HOST` is `ae92d.netcup.net` (the certificate is `*.netcup.net`; the longer customer hostname does not match it). `FTP_PATH` and `APP_URL` are workflow `env` values too. Deploy runs only for a push (or manual run) of the default branch, after tests and builds. The `production` environment records the deployment; protection rules there are optional.
 
 ## Env files
 

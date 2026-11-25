@@ -13,7 +13,8 @@ permissions:
   deployments: write
 
 env:
-  FTP_HOST: hosting256340.ae92d.netcup.net
+  # Customer hostname hosting256340.ae92d.netcup.net does not match the server certificate (*.netcup.net).
+  FTP_HOST: ae92d.netcup.net
   FTP_PATH: /ansetzung
   APP_URL: https://ansetzung.badminton-gomaringen.de
 
