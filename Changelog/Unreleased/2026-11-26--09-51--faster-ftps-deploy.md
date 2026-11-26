@@ -1,0 +1,5 @@
+# Changed
+- Deploys no longer mirror the release file by file. FTPS opens a data connection per file, so uploading `vendor/` took about 15 minutes and held the site in maintenance for the whole transfer.
+- `deploy/ftp-deploy.sh` now uploads at most two zip archives. `vendor/` goes up only when `backend/composer.lock` changes (`api/vendor.sha` on the server). The frontend build and Laravel source go up only when their contents change (`api/app.sha`). Maintenance mode starts after that upload, for the extract and the migrate hook.
+- The one-off extractor is `backend/scripts/extract-release.php`. It refuses an app archive that is missing `index.html`, `.htaccess` or `api/artisan`, and it does not let that archive replace `api/storage/`, `api/.env.production` or `api/vendor/`. It is probed (`?probe=1`) before maintenance mode, so a host without the `zip` extension never takes the site down.
+- The dev backend image installs the PHP `zip` extension so `ExtractReleaseTest` can run there. Production PHP on the webspace needs `zip` as well. Rebuild the backend image (`docker compose up --build backend`) before running the suite locally.

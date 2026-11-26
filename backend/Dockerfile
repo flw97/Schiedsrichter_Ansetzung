@@ -1,9 +1,9 @@
 FROM php:8.4-apache
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends unzip \
+    && apt-get install -y --no-install-recommends unzip libzip-dev \
     && rm -rf /var/lib/apt/lists/* \
-    && docker-php-ext-install pdo_mysql
+    && docker-php-ext-install pdo_mysql zip
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Serve backend/public as document root, route all unknown paths to Laravel's front controller

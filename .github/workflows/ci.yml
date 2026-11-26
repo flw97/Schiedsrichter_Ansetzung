@@ -143,7 +143,7 @@ jobs:
       - run: |
           tar -xzf "$RUNNER_TEMP/backend-build/backend-build.tar.gz" -C backend
           tar -xzf "$RUNNER_TEMP/frontend-dist/frontend-dist.tar.gz" -C frontend
-      - run: sudo apt-get update && sudo apt-get install -y lftp
+      - run: sudo apt-get update && sudo apt-get install -y lftp zip
       - name: Upload release
         env:
           FTP_USER: ${{ secrets.FTP_USER }}

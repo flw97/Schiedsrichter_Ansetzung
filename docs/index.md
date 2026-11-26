@@ -11,4 +11,4 @@
 ## Notes
 - [Local dev environment](./dev-environment.md): how the Docker dev setup, hot reload and API proxy work
 - [App architecture](./app-architecture.md): data model, API/state flow, permissions, frontend domain modules and gotchas of the prototype port
-- [Deployment](./deployment.md): Netcup webspace via FTPS and the required GitHub Actions secrets
+- [Deployment](./deployment.md): Netcup webspace via FTPS. Releases are zip archives (not a per-file mirror) plus the required GitHub Actions secrets
