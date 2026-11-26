@@ -147,6 +147,27 @@ class ExtractReleaseTest extends TestCase
         $this->assertStringEqualsFile($this->root.'/stale.txt', 'old');
     }
 
+    public function test_directories_that_still_hold_files_do_not_fail_the_extract(): void
+    {
+        set_error_handler('release_error_handler');
+        try {
+            release_apply(
+                $this->root,
+                'extract.php',
+                $this->appZip(),
+                $this->vendorZip(),
+                str_repeat('a', 64),
+                str_repeat('b', 64),
+            );
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->assertStringEqualsFile($this->root.'/index.html', 'home');
+        $this->assertStringEqualsFile($this->root.'/api/vendor/new.php', 'new');
+        $this->assertStringEqualsFile($this->root.'/api/storage/app/keep.txt', 'keep');
+    }
+
     public function test_probe_does_not_extract(): void
     {
         $_GET = ['token' => '__TOKEN__', 'probe' => '1'];

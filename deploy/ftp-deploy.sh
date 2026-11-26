@@ -61,6 +61,22 @@ rand() {
   head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n'
 }
 
+# Print the response body. The URL carries the one-off token, so it stays out of the log.
+http_call() {
+  label=$1
+  timeout=$2
+  url=$3
+  code=$(curl -sS --max-time "$timeout" -o "$tmp/http-body" -w '%{http_code}' "$url" || true)
+  if [ -s "$tmp/http-body" ]; then
+    cat "$tmp/http-body"
+    echo
+  fi
+  if [ "$code" != "200" ]; then
+    echo "$label failed: HTTP $code" >&2
+    return 1
+  fi
+}
+
 app_sha=$(tree_sha "$release")
 lock_sha=$(sha256sum "$root/backend/composer.lock" | awk '{print $1; exit}')
 printf '%s' "$app_sha" | grep -Eq '^[0-9a-f]{64}$' || die "could not hash the release"
@@ -90,10 +106,11 @@ EOF
 
 read_cmds=$tmp/lftp-read
 cat "$base" > "$read_cmds"
+# -o is only valid after the remote name. A missing stamp is not a failed connection.
 cat >> "$read_cmds" <<EOF
 set cmd:fail-exit no
-get -o $app_sha_file $FTP_PATH/api/app.sha
-get -o $lock_sha_file $FTP_PATH/api/vendor.sha
+get $FTP_PATH/api/app.sha -o $app_sha_file || pwd
+get $FTP_PATH/api/vendor.sha -o $lock_sha_file || pwd
 EOF
 if ! lftp_run "$read_cmds"; then
   echo "Could not read deploy stamps; uploading the full release." >&2
@@ -165,7 +182,7 @@ status=0
 lftp_run "$upload" || status=$?
 # Probe before maintenance mode: a missing zip extension or a bad URL must leave the site up.
 if [ "$status" -eq 0 ] && [ -n "$extract" ]; then
-  curl -fsS --max-time 60 "$APP_URL/$extract?token=$token&probe=1" || status=$?
+  http_call "Extract probe" 60 "$APP_URL/$extract?token=$token&probe=1" || status=$?
 fi
 if [ "$status" -eq 0 ]; then
   down_cmds=$tmp/lftp-down
@@ -174,7 +191,7 @@ if [ "$status" -eq 0 ]; then
   lftp_run "$down_cmds" || status=$?
 fi
 if [ "$status" -eq 0 ] && [ -n "$extract" ]; then
-  curl -fsS --max-time 300 "$APP_URL/$extract?token=$token" || status=$?
+  http_call "Extract" 300 "$APP_URL/$extract?token=$token" || status=$?
 fi
 if [ "$status" -eq 0 ]; then
   hook_cmds=$tmp/lftp-hook
@@ -183,7 +200,7 @@ if [ "$status" -eq 0 ]; then
   lftp_run "$hook_cmds" || status=$?
 fi
 if [ "$status" -eq 0 ]; then
-  curl -fsS --max-time 300 "$APP_URL/$hook" || status=$?
+  http_call "Deploy hook" 300 "$APP_URL/$hook" || status=$?
 fi
 
 cleanup=$tmp/lftp-cleanup

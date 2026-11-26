@@ -201,8 +201,19 @@ function release_prune(string $root, array $expected, string $self): void
 
             continue;
         }
+        // Expected files still live here. rmdir then warns "Directory not empty";
+        // that warning is not a failed deploy.
         @rmdir($item->getPathname());
     }
+}
+
+function release_error_handler(int $severity, string $message): bool
+{
+    // The @ operator sets error_reporting to 0 for the call. Those warnings are deliberate.
+    if (error_reporting() === 0 || ($severity & error_reporting()) === 0) {
+        return true;
+    }
+    throw new RuntimeException($message);
 }
 
 function release_write_sha(string $path, ?string $sha): void
@@ -290,9 +301,7 @@ function release_http(): void
     set_time_limit(300);
     ignore_user_abort(true);
     ini_set('display_errors', '0');
-    set_error_handler(static function (int $severity, string $message): bool {
-        throw new RuntimeException($message);
-    });
+    set_error_handler('release_error_handler');
 
     try {
         release_apply(
@@ -308,6 +317,8 @@ function release_http(): void
         echo $e->getMessage(), "\n";
 
         return;
+    } finally {
+        restore_error_handler();
     }
     http_response_code(200);
     echo "ok\n";
