@@ -118,7 +118,7 @@
           </div>
 
           <div v-if="openCom[h.id]" class="mt-2">
-            <div v-for="b in comments(h)" :key="b.id" class="text-body-2 py-2" style="border-top: 1px solid #E4DFD1">
+            <div v-for="b in comments(h)" :key="b.id" class="text-body-2 py-2" style="border-top: 1px solid var(--line)">
               <span class="stars">{{ stars(b.stars) }}</span> <strong>{{ b.author }}</strong> <span class="text-caption text-soft">{{ new Date(b.updated_at).toLocaleDateString('de-DE') }}</span>
               <div>{{ b.text }}</div>
             </div>
@@ -223,5 +223,5 @@
 </script>
 
 <style scoped>
-.stars { color: #B7791F; letter-spacing: 1px; }
+.stars { color: rgb(var(--v-theme-star)); letter-spacing: 1px; }
 </style>

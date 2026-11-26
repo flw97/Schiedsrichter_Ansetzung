@@ -121,7 +121,7 @@
               {{ openResp[row.game.id] ? 'Rückmeldungen ausblenden' : `Alle Rückmeldungen anzeigen (${responders(row.game).filter(r => answerObj(row.game.id, r.id)).length} von ${responders(row.game).length})` }}
             </a>
 
-            <div v-if="openResp[row.game.id]" class="pl-2 mt-1" style="border-left: 2px solid #E4DFD1">
+            <div v-if="openResp[row.game.id]" class="pl-2 mt-1" style="border-left: 2px solid var(--line)">
               <div v-for="r in responders(row.game)" :key="r.id" class="text-caption" :class="answerClass(row.game.id, r.id)">
                 {{ r.name }} — {{ answerText(row.game.id, r.id) }}<span v-if="answerObj(row.game.id, r.id)?.comment" class="font-italic text-high-emphasis"> „{{ answerObj(row.game.id, r.id)?.comment }}“</span>
               </div>
@@ -280,5 +280,5 @@
 
 <style scoped>
 .plan-table td { vertical-align: top; padding-top: 10px !important; padding-bottom: 10px !important; }
-.edited { background: #FFFCF3; }
+.edited { background: var(--mint); }
 </style>

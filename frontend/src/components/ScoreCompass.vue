@@ -1,11 +1,10 @@
 <template>
   <svg :height="size" :viewBox="`0 0 ${size} ${size}`" :width="size">
     <circle
+      class="face"
       :cx="c"
       :cy="c"
-      fill="#fff"
       :r="r + 12"
-      stroke="#E4DFD1"
     />
 
     <path
@@ -16,10 +15,10 @@
       opacity="0.85"
     />
 
-    <circle :cx="c" :cy="c" fill="#fff" r="27" />
+    <circle class="hub" :cx="c" :cy="c" r="27" />
 
     <text
-      class="font-display"
+      class="score font-display"
       font-size="19"
       text-anchor="middle"
       :x="c"
@@ -27,8 +26,7 @@
     >{{ score }}</text>
 
     <text
-      class="font-mono"
-      fill="#5C685F"
+      class="score-label font-mono"
       font-size="8"
       text-anchor="middle"
       :x="c"
@@ -36,7 +34,7 @@
     >SCORE</text>
 
     <line
-      stroke="#1B241F"
+      class="needle"
       stroke-linecap="round"
       stroke-width="2"
       :x1="c"
@@ -45,7 +43,7 @@
       :y2="needle[1]"
     />
 
-    <circle :cx="needle[0]" :cy="needle[1]" fill="#1B241F" r="3" />
+    <circle class="needle-tip" :cx="needle[0]" :cy="needle[1]" r="3" />
   </svg>
 </template>
 
@@ -62,9 +60,9 @@
 
   const arcs = computed(() => {
     const segs = [
-      { key: 'distance', color: '#274472', value: props.weights.distance },
-      { key: 'avail', color: '#5C8A72', value: props.weights.avail },
-      { key: 'fair', color: '#D98F3E', value: props.weights.fair },
+      { key: 'distance', color: 'rgb(var(--v-theme-chart-distance))', value: props.weights.distance },
+      { key: 'avail', color: 'rgb(var(--v-theme-chart-avail))', value: props.weights.avail },
+      { key: 'fair', color: 'rgb(var(--v-theme-chart-fair))', value: props.weights.fair },
     ]
     const total = segs.reduce((s, x) => s + x.value, 0) || 1
     let start = -90
@@ -78,3 +76,12 @@
   })
   const needle = computed(() => xy(-90 + (props.score / 100) * 360, r + 9))
 </script>
+
+<style scoped>
+.face { fill: var(--surface); stroke: var(--line); }
+.hub { fill: var(--surface); }
+.score { fill: var(--ink); }
+.score-label { fill: var(--ink-soft); }
+.needle { stroke: var(--ink); }
+.needle-tip { fill: var(--ink); }
+</style>

@@ -13,10 +13,11 @@ Source of truth for the UI was `frontend/old/schiedsrichter-app-prototyp.html` (
 - Referee statistics columns (`season_count`, `monthly_load`, `fairness`, `trend`, `last_game`) are seeded values, not yet derived from history.
 
 ## Frontend (`frontend/src/`)
-- `stores/app.ts`: state + `act(method, path, body, successText)` (shows pushes/errors as toasts, reloads state).
+- `stores/app.ts`: state + `act(method, path, body, successText)` (shows pushes/errors as toasts, reloads state). The bearer token lives in `sessionStorage`. `App.vue` keeps the login form hidden while a stored token is restored via `GET /state`.
 - `domain/`: pure logic ported from the prototype — `rules.ts` (mirror of `Licenses.php`), `dates.ts`, `geo.ts` (place table, distances), `planning.ts` (season planner heuristic), `ics.ts`; unit tests in `domain/__tests__` (`npm test`).
 - `router/index.ts`: one route per page with `meta.perm`/`nav`; `App.vue` builds the drawer from it and redirects to the first allowed page.
 - Shared components: `GameSummary`, `GameFilter`, `ReportForm`/`ReportView`, `ConfirmAction`, `GeoMap` (Leaflet + OpenStreetMap tiles from `tile.openstreetmap.org`; OSM tile policy allows light use only, use an own tile server or provider for heavy traffic), `ScoreCompass`, `StatTile`, `ArchiveEdit`.
+- Visual system: green/white theme in `plugins/vuetify.ts` (`light`: background `#F3F7F4`, primary `#1B4336`; `dark`: background `#0C1612`, primary `#8FCBB0`). Default follows the system preference (`theme.ts`, `localStorage` key `ansetzung-theme`: `system` | `light` | `dark`). The drawer uses theme color `brand` (`#1B4336`) in both schemes. CSS tokens in `styles/main.css` (`--ink`, `--paper`, `--line`, …) read the active Vuetify variables. `ThemeToggle.vue` sits in the app bar and on the login page. One typeface, Inter (`.font-display` and `.font-mono` are Inter, the latter with tabular figures). Club mark: `frontend/public/logo.png`, also `favicon.ico` / `favicon.png` / `apple-touch-icon.png` (generated from the repo-root `logo.png`).
 
 ## Gotchas
 - Apache strips `Authorization` unless `SetEnvIf` is configured (see `backend/Dockerfile`); after changing the Dockerfile run `docker compose up -d --build backend`.

@@ -15,7 +15,8 @@ permissions:
 env:
   # Account host. The TLS certificate is *.netcup.net; ftp-deploy.sh skips only the name check.
   FTP_HOST: hosting256340.ae92d.netcup.net
-  FTP_PATH: /ansetzung
+  # FTP login is already the vhost directory (SSH path /ansetzung). A path of /ansetzung nests a second folder.
+  FTP_PATH: /
   APP_URL: https://ansetzung.badminton-gomaringen.de
 
 jobs:

@@ -92,5 +92,9 @@ export function weightedScore (r: Referee, km: number, w: Weights) {
   return Math.round((dist * w.distance + (r.available ? 1 : 0) * w.avail + (r.fairness ?? 0.5) * w.fair) * 100)
 }
 
-export const CARD_COLORS: Record<string, string> = { gelb: '#E8C23A', rot: '#C0392B', schwarz: '#1B241F' }
+export const CARD_COLORS: Record<string, string> = {
+  gelb: '#E8C23A',
+  rot: '#C0392B',
+  schwarz: 'rgb(var(--v-theme-card-schwarz, 27, 36, 31))',
+}
 export const CARD_LABEL: Record<string, string> = { gelb: 'Gelb', rot: 'Rot', schwarz: 'Schwarz' }

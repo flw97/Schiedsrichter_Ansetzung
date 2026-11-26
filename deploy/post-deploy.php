@@ -3,9 +3,10 @@
 // One-off hook, uploaded under a random name by deploy/ftp-deploy.sh, called once and deleted again.
 // FTP gives no shell, so migrations and caches run through the web PHP.
 
-require __DIR__.'/../vendor/autoload.php';
+// This file is uploaded to the vhost root under a random name, next to the frontend.
+require __DIR__.'/api/vendor/autoload.php';
 
-$kernel = (require __DIR__.'/../bootstrap/app.php')->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel = (require __DIR__.'/api/bootstrap/app.php')->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
 header('Content-Type: text/plain');

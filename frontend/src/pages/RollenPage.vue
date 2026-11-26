@@ -67,7 +67,7 @@
       <div v-if="entries(log.kind).length === 0" class="text-body-2 text-soft mb-4">Noch keine Einträge.</div>
 
       <div class="mb-5">
-        <div v-for="l in entries(log.kind)" :key="l.id" class="text-caption text-soft py-1" style="border-top: 1px solid #E4DFD1">
+        <div v-for="l in entries(log.kind)" :key="l.id" class="text-caption text-soft py-1" style="border-top: 1px solid var(--line)">
           <span class="font-mono">{{ fmtDateTime(l.created_at) }}</span> · {{ l.text }}
         </div>
       </div>

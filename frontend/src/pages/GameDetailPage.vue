@@ -14,7 +14,7 @@
         <div class="d-flex align-center ga-2 mb-3 text-body-2 font-weight-medium"><v-icon color="primary" icon="mdi-gauge" size="18" /> Gewichtung</div>
 
         <div v-for="w in WEIGHTS" :key="w.key" class="mb-2">
-          <div class="d-flex justify-space-between text-body-2 text-soft"><span>{{ w.label }}</span><span class="font-mono" :style="{ color: w.color }">{{ Math.round(weights[w.key] * 100) }}%</span></div>
+          <div class="d-flex justify-space-between text-body-2 text-soft"><span>{{ w.label }}</span><span class="font-mono" :class="`text-${w.color}`">{{ Math.round(weights[w.key] * 100) }}%</span></div>
 
           <v-slider
             v-model="weights[w.key]"
@@ -168,9 +168,9 @@
   const need = computed(() => (game.value ? requiredLevel(game.value.competition) : 0))
 
   const WEIGHTS = [
-    { key: 'distance', label: 'Entfernung', color: '#274472' },
-    { key: 'avail', label: 'Verfügbarkeit', color: '#5C8A72' },
-    { key: 'fair', label: 'Faire Verteilung', color: '#D98F3E' },
+    { key: 'distance', label: 'Entfernung', color: 'chart-distance' },
+    { key: 'avail', label: 'Verfügbarkeit', color: 'chart-avail' },
+    { key: 'fair', label: 'Faire Verteilung', color: 'chart-fair' },
   ] as const
   const weights = reactive<Weights>({ distance: 0.4, avail: 0.35, fair: 0.25 })
 

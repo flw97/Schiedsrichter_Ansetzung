@@ -76,7 +76,7 @@
 </script>
 
 <style scoped>
-.geo-map { border: 1px solid #E4DFD1; border-radius: 12px; overflow: hidden; z-index: 0; }
+.geo-map { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; z-index: 0; }
 .geo-map :deep(.geo-pin) { display: block; width: 100%; height: 100%; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
 .geo-map :deep(.geo-pin.square) { border-radius: 2px; }
 .geo-map :deep(.geo-pin.selected) { outline: 3px solid rgba(27, 36, 31, 0.35); }

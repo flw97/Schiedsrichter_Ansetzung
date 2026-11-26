@@ -1,52 +1,79 @@
 <template>
   <v-app>
-    <LoginPage v-if="!store.state" />
+    <LoginPage v-if="!restoring && !store.state" />
 
-    <template v-else>
-      <v-navigation-drawer color="primary" permanent width="220">
-        <div class="pa-4 pb-2">
-          <div class="d-flex align-center ga-2">
-            <span class="dot" />
-            <span class="font-display text-h6">Ansetzung</span>
+    <div v-else-if="restoring" class="restore">
+      <img alt="" src="/logo.png?v=3">
+    </div>
+
+    <template v-else-if="store.state">
+      <v-navigation-drawer
+        v-model="navOpen"
+        class="app-nav"
+        color="brand"
+        :permanent="mdAndUp"
+        :temporary="!mdAndUp"
+        width="260"
+      >
+        <div class="brand">
+          <img alt="" class="brand-logo" src="/logo.png?v=3">
+
+          <div>
+            <div class="brand-name">Ansetzung</div>
+            <div class="brand-role">{{ area }}</div>
           </div>
-
-          <div class="font-mono text-caption text-uppercase opacity-60">{{ area }}</div>
         </div>
 
-        <v-list density="compact" nav>
-          <v-list-item
-            v-for="n in nav"
-            :key="n.path"
-            :prepend-icon="n.meta.icon"
-            :title="n.meta.title"
-            :to="n.path"
-          >
-            <template v-if="badge(n.path)" #append>
-              <v-chip color="accent" size="x-small" variant="flat">{{ badge(n.path) }}</v-chip>
-            </template>
-          </v-list-item>
-        </v-list>
+        <div v-for="group in groups" :key="group.label">
+          <div class="nav-label">{{ group.label }}</div>
+
+          <v-list density="compact" nav>
+            <v-list-item
+              v-for="n in group.items"
+              :key="n.path"
+              :prepend-icon="n.meta.icon"
+              :title="n.meta.title"
+              :to="n.path"
+            >
+              <template v-if="badge(n.path)" #append>
+                <v-chip class="nav-badge" size="x-small" variant="flat">{{ badge(n.path) }}</v-chip>
+              </template>
+            </v-list-item>
+          </v-list>
+        </div>
 
         <template #append>
-          <v-list density="compact" nav>
-            <v-list-item class="opacity-70" prepend-icon="mdi-logout" title="Abmelden" @click="store.logout()" />
-          </v-list>
+          <div class="nav-foot">
+            <v-list density="compact" nav>
+              <v-list-item prepend-icon="mdi-logout" title="Abmelden" @click="store.logout()" />
+            </v-list>
+          </div>
         </template>
       </v-navigation-drawer>
 
-      <v-app-bar border density="compact" elevation="0" flat>
+      <v-app-bar
+        class="app-bar"
+        density="comfortable"
+        elevation="0"
+        flat
+        height="64"
+      >
+        <v-app-bar-nav-icon v-if="!mdAndUp" @click="navOpen = !navOpen" />
+
         <v-spacer />
+
+        <ThemeToggle />
 
         <v-menu location="bottom end" max-height="360">
           <template #activator="{ props }">
-            <v-btn icon v-bind="props">
+            <v-btn aria-label="Benachrichtigungen" icon v-bind="props" variant="text">
               <v-badge color="error" :content="pushes.length" :model-value="pushes.length > 0">
                 <v-icon icon="mdi-bell-outline" />
               </v-badge>
             </v-btn>
           </template>
 
-          <v-card min-width="300" width="320">
+          <v-card min-width="300" width="340">
             <v-card-title class="text-subtitle-2">Benachrichtigungen</v-card-title>
             <v-divider />
             <div v-if="pushes.length === 0" class="pa-4 text-body-2 text-soft">Keine neuen Benachrichtigungen</div>
@@ -59,17 +86,19 @@
           </v-card>
         </v-menu>
 
-        <v-avatar class="font-mono mx-2" color="surface-variant" size="28">
-          <span class="text-caption text-primary">{{ store.state.me.name.slice(0, 2).toUpperCase() }}</span>
-        </v-avatar>
+        <div class="user">
+          <v-avatar color="primary" size="32">
+            <span class="user-initials">{{ initials }}</span>
+          </v-avatar>
 
-        <span class="text-body-2 text-soft mr-4">{{ store.state.me.name }}</span>
+          <span class="user-name">{{ store.state.me.name }}</span>
+        </div>
       </v-app-bar>
 
       <v-main>
-        <v-container class="pa-8" fluid style="max-width: 1200px; margin: 0">
+        <div class="page-shell">
           <router-view />
-        </v-container>
+        </div>
       </v-main>
     </template>
 
@@ -83,27 +112,69 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onBeforeUnmount, watch } from 'vue'
+  import { computed, onBeforeUnmount, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
+  import { useDisplay } from 'vuetify'
   import { token } from '@/api'
+  import ThemeToggle from '@/components/ThemeToggle.vue'
   import { fmtDateTime, isPast } from '@/domain/dates'
   import { classify, ROLE_LABEL } from '@/domain/rules'
   import LoginPage from '@/pages/LoginPage.vue'
   import { routes } from '@/router'
   import { useAppStore } from '@/stores/app'
+  import { useThemeChoice } from '@/theme'
+
+  useThemeChoice()
 
   const store = useAppStore()
   const route = useRoute()
   const router = useRouter()
+  const { mdAndUp } = useDisplay()
+  const navOpen = ref(true)
 
   const role = computed(() => store.state?.me.role)
-  const area = computed(() => (role.value === 'schiri' ? 'Frontend · Schiedsrichter' : `Backend · ${ROLE_LABEL[role.value ?? 'admin']}`))
+  const area = computed(() => ROLE_LABEL[role.value ?? 'admin'])
+  const initials = computed(() => store.state?.me.name.slice(0, 2).toUpperCase() ?? '')
   const allowed = (r: (typeof routes)[number]) => !r.meta.perm || store.can(r.meta.perm)
   const nav = computed(() => {
     const side = role.value === 'schiri' ? 'schiri' : 'admin'
     return routes.filter(r => (r.meta.nav === side || r.meta.nav === 'both') && allowed(r))
   })
   const pushes = computed(() => store.state?.pushes ?? [])
+
+  const NAV_GROUPS = {
+    admin: [
+      { label: 'Planung', paths: ['/ansetzungen', '/import', '/saisonplanung'] },
+      { label: 'Personen', paths: ['/statistik', '/schiedsrichter', '/lizenzen', '/beobachtung', '/rollen'] },
+      { label: 'Betrieb', paths: ['/karten', '/archiv', '/regelwerke', '/unterkuenfte', '/standorte'] },
+    ],
+    schiri: [
+      { label: 'Einsätze', paths: ['/abfrage', '/meine-ansetzungen', '/archiv'] },
+      { label: 'Persönlich', paths: ['/regelwerke', '/unterkuenfte', '/meine-daten'] },
+    ],
+  } as const
+
+  const groups = computed(() => {
+    const side = role.value === 'schiri' ? 'schiri' : 'admin'
+    const byPath = new Map(nav.value.map(item => [item.path, item]))
+    const used = new Set<string>()
+    const grouped: { label: string, items: typeof nav.value }[] = NAV_GROUPS[side].map(section => {
+      const items = section.paths.flatMap(path => {
+        const item = byPath.get(path)
+        if (!item) {
+          return []
+        }
+        used.add(path)
+        return [item]
+      })
+      return { label: section.label, items }
+    }).filter(section => section.items.length > 0)
+    const rest = nav.value.filter(item => !used.has(item.path))
+    if (rest.length > 0) {
+      grouped.push({ label: 'Weiteres', items: rest })
+    }
+    return grouped
+  })
 
   // Offene Punkte je Bereich als Zähler in der Navigation
   function badge (path: string) {
@@ -132,6 +203,15 @@
     }
   }, { immediate: true })
 
+  watch(mdAndUp, open => {
+    navOpen.value = open
+  })
+  watch(() => route.path, () => {
+    if (!mdAndUp.value) {
+      navOpen.value = false
+    }
+  })
+
   // Automatische Abmeldung nach 15 Minuten Inaktivität
   const IDLE_MS = 15 * 60 * 1000
   const EVENTS = ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'] as const
@@ -148,12 +228,85 @@
   })
   onBeforeUnmount(() => clearTimeout(timer))
 
-  // Bestehende Sitzung (Token im Session-Speicher) beim Neuladen der Seite übernehmen
-  if (token.get()) {
-    store.load().catch(() => {})
+  // Bestehende Sitzung übernehmen, ohne das Anmeldeformular zu zeigen, bis /state geantwortet hat.
+  const restoring = ref(token.get() !== null)
+  if (restoring.value) {
+    store.load().finally(() => {
+      restoring.value = false
+    })
   }
 </script>
 
 <style scoped>
-.dot { width: 8px; height: 8px; border-radius: 50%; background: rgb(var(--v-theme-accent)); display: inline-block; }
+.restore {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green);
+}
+.restore img { width: 72px; height: 72px; object-fit: contain; }
+
+.app-nav { border-right: 0 !important; color: #fff; }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 20px 8px;
+}
+.brand-logo { width: 46px; height: 46px; object-fit: contain; flex-shrink: 0; }
+.brand-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.028em;
+  line-height: 1.15;
+  color: #fff;
+}
+.brand-role { margin-top: 2px; font-size: 0.75rem; color: rgba(255, 255, 255, 0.72); }
+.nav-label {
+  padding: 16px 22px 2px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+.app-nav :deep(.v-list) { background: transparent; color: #fff; }
+.app-nav :deep(.v-list-item) {
+  border-radius: 10px !important;
+  margin-bottom: 2px;
+  min-height: 40px;
+  color: rgba(255, 255, 255, 0.88);
+}
+.app-nav :deep(.v-list-item .v-list-item-title),
+.app-nav :deep(.v-list-item .v-icon) { color: inherit; opacity: 1; }
+.app-nav :deep(.v-list-item--active) { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.app-nav :deep(.v-list-item--active .v-list-item-title) { font-weight: 600; color: #fff; }
+.app-nav :deep(.v-list-item:not(.v-list-item--active):hover) { background: rgba(255, 255, 255, 0.08); }
+.nav-badge { background: #fff !important; color: var(--green) !important; }
+.nav-foot { border-top: 1px solid rgba(255, 255, 255, 0.16); margin-top: 8px; padding: 8px 0; }
+
+.app-bar { border-bottom: 1px solid var(--line) !important; background: var(--surface) !important; }
+.user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 16px 0 8px;
+  padding: 4px 12px 4px 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+}
+.user-initials { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.03em; color: rgb(var(--v-theme-on-primary)); }
+.user-name { font-size: 0.875rem; font-weight: 500; color: var(--ink); }
+
+.page-shell {
+  max-width: 1180px;
+  margin-inline: auto;
+  padding: 32px 32px 64px;
+}
+@media (max-width: 600px) {
+  .page-shell { padding: 20px 16px 48px; }
+  .user-name { display: none; }
+}
 </style>
