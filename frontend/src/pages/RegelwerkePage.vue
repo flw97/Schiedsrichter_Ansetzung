@@ -156,6 +156,7 @@
   import { api } from '@/api'
   import ConfirmAction from '@/components/ConfirmAction.vue'
   import PageHeader from '@/components/PageHeader.vue'
+  import { notifyError } from '@/notify'
   import { useAppStore } from '@/stores/app'
 
   const CATEGORIES = ['Spielregeln', 'Wettspielordnung', 'Durchführungsbestimmungen', 'Schiedsrichter-Leitfaden', 'Formulare', 'Sonstiges']
@@ -190,7 +191,7 @@
   }
   async function upload (id?: number) {
     if (!file.value) {
-      store.toasts.push({ text: 'Bitte eine PDF-Datei auswählen.', color: 'error' })
+      notifyError('Bitte eine PDF-Datei auswählen.')
       return
     }
     const data = new FormData()

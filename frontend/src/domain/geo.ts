@@ -7,7 +7,7 @@ export interface MapPoint { id: string, kind: 'ref' | 'hall' | 'hotel', lat: num
 export const GEO_PLACES: Record<string, [number, number]> = {
   'stuttgart': [48.7758, 9.1829], 'esslingen': [48.7406, 9.3051], 'esslingen am neckar': [48.7406, 9.3051], 'plochingen': [48.7125, 9.4189],
   'kirchheim': [48.6481, 9.4519], 'nürtingen': [48.6277, 9.3414], 'neckartenzlingen': [48.6217, 9.2653], 'reutlingen': [48.4914, 9.2043],
-  'metzingen': [48.5372, 9.2878], 'tübingen': [48.5216, 9.0576], 'rottenburg': [48.4765, 8.9347], 'herrenberg': [48.5949, 8.867],
+  'metzingen': [48.5372, 9.2878], 'tübingen': [48.5216, 9.0576], 'gomaringen': [48.4528, 9.0958], 'rottenburg': [48.4765, 8.9347], 'herrenberg': [48.5949, 8.867],
   'böblingen': [48.6833, 9.0167], 'sindelfingen': [48.7133, 9.0027], 'leonberg': [48.7986, 9.0141], 'ludwigsburg': [48.8975, 9.192],
   'kornwestheim': [48.8586, 9.185], 'fellbach': [48.8089, 9.2759], 'waiblingen': [48.83, 9.3167], 'schorndorf': [48.8056, 9.5278],
   'filderstadt': [48.6575, 9.22], 'leinfelden-echterdingen': [48.6928, 9.1647], 'ostfildern': [48.7258, 9.2561], 'denkendorf': [48.7078, 9.3175],

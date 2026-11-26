@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-lg">
-    <PageHeader subtitle="Wohnorte der Schiedsrichter (aus den hinterlegten Adressen), Spielorte und Unterkünfte auf der OpenStreetMap-Karte. Entfernungen sind Luftlinie × 1,25 als Näherung für die Fahrstrecke." title="Standorte" />
+    <PageHeader subtitle="Wohnorte, die jede Person selbst unter Meine Daten einträgt, dazu Spielorte und Unterkünfte. Entfernungen sind Luftlinie × 1,25 als Näherung für die Fahrstrecke." title="Standorte" />
 
     <div class="gap-row mb-2" style="gap: 16px">
       <v-checkbox
@@ -29,6 +29,8 @@
         <thead><tr><th>Schiedsrichter</th><th>Hinterlegte Adresse</th><th /></tr></thead>
 
         <tbody>
+          <tr v-if="store.referees.length === 0"><td class="text-soft" colspan="3">Noch keine Schiedsrichter. Ein Schiedsrichter-Konto legt ein leeres Profil an; den Standort trägt die Person selbst ein.</td></tr>
+
           <tr
             v-for="r in store.referees"
             :key="r.id"
@@ -38,7 +40,7 @@
           >
             <td class="font-weight-medium">{{ r.name }}</td>
             <td class="text-soft">{{ r.address || '—' }}</td>
-            <td class="text-caption" :class="refGeo(r) ? 'text-success' : 'text-error'">{{ refGeo(r) ? `auf der Karte (${refGeo(r)!.genau})` : 'Ort nicht erkannt' }}</td>
+            <td class="text-caption" :class="refGeo(r) ? 'text-success' : r.address ? 'text-error' : 'text-soft'">{{ refGeo(r) ? `auf der Karte (${refGeo(r)!.genau})` : r.address ? 'Ort nicht erkannt' : 'noch nicht eingetragen' }}</td>
           </tr>
         </tbody>
       </v-table>
@@ -52,7 +54,7 @@
   import { computed, ref } from 'vue'
   import GeoMap from '@/components/GeoMap.vue'
   import PageHeader from '@/components/PageHeader.vue'
-  import { accommodationGeo, type Geo, type MapPoint, osmLink, refGeo, roadKm, VENUE_PLACE, venueGeo } from '@/domain/geo'
+  import { accommodationGeo, type Geo, type MapPoint, osmLink, refGeo, roadKm, venueGeo } from '@/domain/geo'
   import { useAppStore } from '@/stores/app'
 
   const LAYERS = [{ kind: 'ref', label: 'Schiedsrichter', color: '#2F6B4F' }, { kind: 'hall', label: 'Spielorte', color: '#2A5A9E' }, { kind: 'hotel', label: 'Unterkünfte', color: '#D9822B' }] as const
@@ -64,14 +66,14 @@
   const point = (id: string, kind: MapPoint['kind'], g: Geo | null, label: string, sub: string): Point[] => (g ? [{ id, kind, lat: g.lat, lon: g.lon, label, sub, genau: g.genau }] : [])
   const all = computed(() => [
     ...store.referees.flatMap(r => point(`r${r.id}`, 'ref', refGeo(r), r.name, r.address ?? '')),
-    ...[...new Set([...Object.keys(VENUE_PLACE), ...store.games.map(g => g.venue)])].flatMap(v => point(`h:${v}`, 'hall', venueGeo(v), v, 'Spielort')),
+    ...[...new Set(store.games.map(g => g.venue))].flatMap(v => point(`h:${v}`, 'hall', venueGeo(v), v, 'Spielort')),
     ...store.state!.accommodations.flatMap(a => point(`u:${a.id}`, 'hotel', accommodationGeo(a), a.name, `${a.street ?? ''}, ${a.zip ?? ''} ${a.city}`)),
   ])
   const selected = computed(() => all.value.find(p => p.id === sel.value) ?? null)
   const nearest = computed(() => (selected.value
     ? all.value.filter(p => p.kind === 'hall' && p.id !== selected.value!.id).map(p => ({ p, d: roadKm(selected.value!, p) })).toSorted((a, b) => a.d - b.d).slice(0, 4)
     : []))
-  const missing = computed(() => store.referees.filter(r => !refGeo(r)).map(r => r.name))
+  const missing = computed(() => store.referees.filter(r => r.address && !refGeo(r)).map(r => r.name))
 </script>
 
 <style scoped>

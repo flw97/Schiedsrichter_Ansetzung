@@ -104,6 +104,7 @@
   import GameSummary from '@/components/GameSummary.vue'
   import PageHeader from '@/components/PageHeader.vue'
   import { assignedIds, COMPETITIONS, eligible, gameMatches, GF0, isLeague, requiredLevel, requiredLevelLabel, responseOf } from '@/domain/rules'
+  import { notifyError } from '@/notify'
   import { useAppStore } from '@/stores/app'
 
   const store = useAppStore()
@@ -119,7 +120,7 @@
 
   async function create () {
     if (!form.title || !form.date || !form.venue || (form.type === 'match' && !form.time)) {
-      store.toasts.push({ text: 'Bitte alle Felder ausfüllen.', color: 'error' })
+      notifyError('Bitte alle Felder ausfüllen.')
       return
     }
     if (await store.act('POST', '/games', { ...form, time: form.time || null }, 'Veranstaltung angelegt.')) {

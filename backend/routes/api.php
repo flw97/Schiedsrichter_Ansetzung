@@ -25,6 +25,7 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/state', [StateController::class, 'show']);
+    Route::get('/notifications', [StateController::class, 'notifications']);
     Route::post('/games/{game}/report', [MyGamesController::class, 'report']);
 
     Route::middleware('can:ansetzen')->group(function () {

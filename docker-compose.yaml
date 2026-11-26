@@ -30,6 +30,9 @@ services:
       - "8080:80"
     env_file:
       - ./backend/.env.development
+      # Token for the nuLiga crawler. Optional; without it the demo schedule stays in use.
+      - path: ./backend/.env.local
+        required: false
     environment:
       # Run Apache as the host user so Laravel can write to the bind-mounted storage/
       APACHE_RUN_USER: "#${UID:-1000}"

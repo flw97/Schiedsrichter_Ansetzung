@@ -10,7 +10,7 @@ export interface Blackout { from: string, to: string, reason: string | null }
 export interface Referee {
   id: number
   name: string
-  license: string
+  license: string | null
   club: string | null
   // Nur für Admins bzw. im eigenen Profil vorhanden
   nuliga_id?: string | null

@@ -11,6 +11,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Services\NuLigaClient;
 use App\Services\NuLigaSync;
+use App\Services\Push;
 use Illuminate\Database\Seeder;
 
 /**
@@ -20,8 +21,11 @@ class DatabaseSeeder extends Seeder
 {
     public const PASSWORD = 'demo1234';
 
-    public function run(NuLigaSync $nuliga): void
+    public function run(Push $push): void
     {
+        // Der Demo-Bestand bleibt die simulierte Schnittstelle. Der Abgleich im laufenden
+        // System liest den Crawler, sobald NULIGA_TOKEN gesetzt ist.
+        $nuliga = new NuLigaSync(new NuLigaClient, $push);
         $w = fn (int $weeks, bool $sunday = false) => NuLigaClient::weekend($weeks, $sunday)->toDateString();
         $refs = collect([
             ['p1', 'Petra Holzmann', 'SG Talheim', 'International', '2027-06-30', 'petra.holzmann@web.de', '0151 2345678', 'Hauptstraße 4, 73728 Esslingen', 3, 0.8, true, 14, 'So, 13. Sep', '+2 ggü. Vormonat', false, false],

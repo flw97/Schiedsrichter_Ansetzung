@@ -12,7 +12,7 @@ use App\Models\Setting;
  */
 class NuLigaSync
 {
-    public function __construct(private NuLigaClient $client, private Push $push) {}
+    public function __construct(private NuLigaFeed $client, private Push $push) {}
 
     public function syncGames(): void
     {

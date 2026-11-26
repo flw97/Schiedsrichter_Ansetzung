@@ -5,10 +5,11 @@ namespace App\Services;
 use Carbon\CarbonImmutable;
 
 /**
- * Simulierte nuPortalRS-Schnittstelle (lesend), bis der echte Zugang vorliegt.
+ * Simulierte Schnittstelle für Demo-Daten und Tests.
  * Termine liegen relativ zum heutigen Datum: weeks = 0 -> kommendes Wochenende.
+ * Der laufende Abgleich nutzt {@see CrawlerNuLigaClient}, sobald NULIGA_TOKEN gesetzt ist.
  */
-class NuLigaClient
+class NuLigaClient implements NuLigaFeed
 {
     /** Lizenzdaten je NuLiga-Personen-ID; null = NuLiga liefert (noch) keine Lizenzdaten. */
     public function licenses(): array

@@ -3,7 +3,7 @@
     <template #actions>
       <span class="font-mono text-caption text-soft">Letzter Abgleich: {{ lastSync }}</span>
     </template>
-    Spiele der {{ LEAGUES.join(', ') }} werden über die nuPortalRS-Schnittstelle (lesend) abgerufen. Regulär übernommen werden zunächst nur
+    Spiele der {{ LEAGUES.join(', ') }} werden aus dem nuLiga-Crawler gelesen. Regulär übernommen werden zunächst nur
     Heimspiele in Baden-Württemberg — alle anderen Spiele müssen separat von einem Admin angefordert werden.
   </PageHeader>
 

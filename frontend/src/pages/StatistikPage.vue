@@ -8,7 +8,7 @@
 
         <div class="flex-grow-1">
           <div class="text-body-1 font-weight-medium">{{ r.name }}</div>
-          <div class="gap-row text-caption text-soft"><v-chip color="primary">{{ r.license }}</v-chip> Lizenz gültig bis {{ isoToDe(r.license_valid_until) }}</div>
+          <div class="gap-row text-caption text-soft"><v-chip v-if="r.license" color="primary">{{ r.license }}</v-chip><span v-else>noch keine Lizenz</span><span v-if="r.license_valid_until"> gültig bis {{ isoToDe(r.license_valid_until) }}</span></div>
         </div>
 
         <div class="text-right">

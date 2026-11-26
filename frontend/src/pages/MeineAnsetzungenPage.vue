@@ -80,7 +80,7 @@
 
       <div>
         <div class="font-display text-h6">{{ me.season_count }} Einsätze</div>
-        <div class="text-caption text-soft">diese Saison · Lizenz {{ me.license }}, gültig bis {{ isoToDe(me.license_valid_until) }}</div>
+        <div class="text-caption text-soft">diese Saison · {{ me.license ? `Lizenz ${me.license}${me.license_valid_until ? `, gültig bis ${isoToDe(me.license_valid_until)}` : ''}` : 'Lizenz noch nicht eingetragen' }}</div>
       </div>
     </v-card>
   </div>

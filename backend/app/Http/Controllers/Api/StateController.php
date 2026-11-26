@@ -63,6 +63,21 @@ class StateController extends Controller
         return response()->json($state);
     }
 
+    /** Neue Push-Mitteilungen der angemeldeten Person. Die SPA fragt das einmal pro Sekunde ab. */
+    public function notifications(Request $request): JsonResponse
+    {
+        $after = max(0, $request->integer('after'));
+
+        return response()->json([
+            'notifications' => PushMessage::query()
+                ->where('user_id', $request->user()->id)
+                ->where('id', '>', $after)
+                ->orderBy('id')
+                ->limit(50)
+                ->get(['id', 'text', 'created_at']),
+        ]);
+    }
+
     /** Kontaktdaten sind maskiert (außer im eigenen Profil); Personen ohne Einsichtsrecht sehen nur Name, Lizenz und Verein. */
     private function referee(Referee $r, bool $staff, bool $own): array
     {

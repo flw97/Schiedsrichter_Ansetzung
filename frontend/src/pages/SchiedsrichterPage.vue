@@ -24,7 +24,11 @@
 
         <tr v-for="r in rows" :key="r.id">
           <td class="py-2"><div class="font-weight-medium">{{ r.name }}</div><div class="text-caption text-soft">{{ r.club }}{{ r.available ? '' : ' · nicht verfügbar' }}</div></td>
-          <td><v-chip color="primary">{{ r.license }}</v-chip><div class="text-caption text-soft">bis {{ isoToDe(r.license_valid_until) }}</div></td>
+
+          <td>
+            <template v-if="r.license"><v-chip color="primary">{{ r.license }}</v-chip><div v-if="r.license_valid_until" class="text-caption text-soft">bis {{ isoToDe(r.license_valid_until) }}</div></template>
+            <span v-else class="text-soft">noch keine Lizenz</span>
+          </td>
 
           <td>
             <v-chip v-if="r.persp_national" class="mr-1" color="accent">National</v-chip>

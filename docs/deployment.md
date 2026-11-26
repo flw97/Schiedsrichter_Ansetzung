@@ -26,4 +26,6 @@ Repository secrets (Settings → Secrets and variables → Actions):
 
 `api/.env.production` in the vhost (SSH: `/ansetzung/api/.env.production`) is created and edited on the webspace. CI does not have a copy. Laravel loads it because `APP_ENV` is unset or `production` (`backend/bootstrap/app.php`, and `SetEnv APP_ENV production` in `deploy/htaccess`). The migrate hook fails until that file exists. Local Docker sets `APP_ENV=local` and uses `backend/.env.development`. Keep `APP_MAINTENANCE_DRIVER=file`; the deploy writes `api/storage/framework/down`.
 
+NuLiga sync needs `NULIGA_API_URL` (default `https://nuliga.badminton-gomaringen.de/api`) and `NULIGA_TOKEN` (operator bearer token) in that file. Without the token the demo schedule is used. The same pair lives in gitignored `backend/.env.local` for Docker.
+
 `frontend/.env.production` stays in the repository. `npm run build` loads it (Vite production mode). Only variables whose names start with `VITE_` are included in the built JavaScript. It is not uploaded.

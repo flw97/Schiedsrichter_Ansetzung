@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Services\CrawlerNuLigaClient;
+use App\Services\NuLigaClient;
+use App\Services\NuLigaFeed;
 use App\Services\Push;
 use App\Support\Permissions;
 use Illuminate\Support\Facades\Gate;
@@ -20,6 +23,14 @@ class AppServiceProvider extends ServiceProvider
     {
         // Je Anfrage gesammelte Push-Mitteilungen
         $this->app->scoped(Push::class);
+        $this->app->bind(NuLigaFeed::class, function () {
+            $token = config('services.nuliga.token');
+            if (is_string($token) && $token !== '') {
+                return new CrawlerNuLigaClient(rtrim((string) config('services.nuliga.url'), '/'), $token);
+            }
+
+            return new NuLigaClient;
+        });
     }
 
     public function boot(): void

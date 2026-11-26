@@ -17,8 +17,9 @@
           <div class="text-body-1 font-weight-medium">{{ r.name }}</div>
 
           <div class="gap-row text-caption text-soft">
-            <v-chip color="primary">{{ r.license }}</v-chip>
-            <span>gültig bis {{ isoToDe(r.license_valid_until) }}</span>
+            <v-chip v-if="r.license" color="primary">{{ r.license }}</v-chip>
+            <span v-else>noch keine Lizenz</span>
+            <span v-if="r.license_valid_until">gültig bis {{ isoToDe(r.license_valid_until) }}</span>
             <span v-if="reminderDate(r)">· Erinnerung {{ r.license_reminded_for === r.license_valid_until ? 'gesendet' : `ab ${reminderDate(r)!.toLocaleDateString('de-DE')}` }}</span>
             <span>· {{ r.license_synced_at ? `zuletzt aus NuLiga synchronisiert am ${isoToDe(r.license_synced_at)}` : 'noch nie mit NuLiga synchronisiert' }}</span>
           </div>
@@ -71,7 +72,7 @@
       <v-divider class="my-3" />
 
       <div class="gap-row text-caption text-soft">
-        <span>Verein (aus NuLiga): <strong class="text-high-emphasis">{{ r.club || '—' }}</strong></span>
+        <span>Verein: <strong class="text-high-emphasis">{{ r.club || '—' }}</strong></span>
         <span>· Perspektiv-Team (nur Admins):</span>
 
         <v-chip
@@ -108,7 +109,7 @@
   const edit = reactive({ license: '', until: '' })
   function startEdit (r: Referee) {
     editId.value = r.id
-    Object.assign(edit, { license: r.license, until: r.license_valid_until ?? '' })
+    Object.assign(edit, { license: r.license ?? LICENSE_LEVELS[0], until: r.license_valid_until ?? '' })
   }
   async function save (id: number) {
     if (edit.until && await store.act('PUT', `/referees/${id}/license`, { license: edit.license, license_valid_until: edit.until })) {

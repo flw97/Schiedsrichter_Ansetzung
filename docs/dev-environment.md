@@ -5,6 +5,7 @@
 - Hot reload: both source dirs are bind-mounted. Vite HMR for the frontend; PHP is re-read per request.
 - `frontend/node_modules` in the container is a named volume (`frontend_node_modules`), separate from the host's. After changing `package.json`, restart the `frontend` service (`npm ci` runs on start).
 - Backend env vars: `backend/.env.development` (loaded via `env_file`, no `.env` file needed). DB credentials there must match the `db` service in `docker-compose.yaml`. `backend/.env.production` is gitignored and is not loaded while `APP_ENV=local`.
+- `backend/.env.local` (gitignored, optional) holds `NULIGA_API_URL` and `NULIGA_TOKEN` for the crawler. Compose loads it after `.env.development`. Recreate the backend container after changing it. Without the token, sync keeps the demo schedule.
 - Backend start command runs `composer install` and `php artisan migrate --force`, then Apache. `vendor/` lives in the named volume `backend_vendor`; after changing `composer.json` restart the `backend` service.
 - Apache runs as `UID`/`GID` (default 1000) so Laravel can write to the bind-mounted `storage/`. Logs go to stderr (`docker compose logs backend`).
 - Artisan/tests: `docker compose exec backend php artisan ...`, `docker compose exec backend php artisan test`, lint with `docker compose exec backend vendor/bin/pint`. The image installs the PHP `zip` extension; `ExtractReleaseTest` needs it. Rebuild the backend image after pulling that Dockerfile change.

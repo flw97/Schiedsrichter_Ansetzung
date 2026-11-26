@@ -85,7 +85,7 @@ Tests: `docker compose exec backend php artisan test`, im Frontend `npm test`, `
 - [x] Verwaltung von Spieltagen und Spielen
 - [x] Ansetzungen erstellen und bearbeiten
 - [x] Konfliktprüfung
-- [ ] Anbindung NuLiga (aktuell simuliert)
+- [ ] Anbindung NuLiga (Spielpläne über den Crawler; Lizenzen noch manuell)
 - [ ] Export der Ansetzungsübersicht
 - [ ] Benachrichtigungen (Push-Versand; aktuell nur in der App)
 

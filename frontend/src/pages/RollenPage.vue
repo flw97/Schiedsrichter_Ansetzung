@@ -36,7 +36,7 @@
         <v-btn color="primary" @click="add">Anlegen</v-btn>
       </div>
 
-      <div class="text-caption text-soft mt-2">Schiedsrichter-Konten werden über den Namen mit dem NuLiga-Profil verknüpft.</div>
+      <div class="text-caption text-soft mt-2">Ein Schiedsrichter-Konto legt ein leeres Profil an. Name, Verein und Standort trägt die Person selbst unter Meine Daten ein.</div>
     </v-card>
 
     <v-card class="mb-5">

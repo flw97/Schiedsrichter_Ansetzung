@@ -2,6 +2,7 @@
 
 import { computed, ref, watch } from 'vue'
 import { useTheme } from 'vuetify'
+import { syncToastTheme } from '@/notify'
 
 export const THEME_KEY = 'ansetzung-theme'
 export const THEME_BG = { light: '#F3F7F4', dark: '#0C1612' } as const
@@ -43,6 +44,7 @@ export function useThemeChoice () {
       document.documentElement.style.background = background
       document.documentElement.style.colorScheme = value ? 'dark' : 'light'
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background)
+      syncToastTheme(value)
     }, { immediate: true })
   }
 

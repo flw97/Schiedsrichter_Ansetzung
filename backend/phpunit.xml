@@ -29,5 +29,6 @@
         <server name="PULSE_ENABLED" value="false" force="true"/>
         <server name="TELESCOPE_ENABLED" value="false" force="true"/>
         <server name="NIGHTWATCH_ENABLED" value="false" force="true"/>
+        <server name="NULIGA_TOKEN" value="" force="true"/>
     </php>
 </phpunit>

@@ -24,9 +24,8 @@ class UserController extends Controller
             'role' => ['required', Rule::in(array_keys(Permissions::ROLES))],
         ]);
         $data['username'] = mb_strtolower(trim($data['username']));
-        // Schiedsrichter-Konten werden über den Namen mit dem NuLiga-Profil verknüpft
-        $data['referee_id'] = $data['role'] === 'schiri' ? Referee::firstWhere('name', $data['name'])?->id : null;
-        User::create($data);
+        $user = User::create($data);
+        $this->ensureRefereeProfile($user);
         AuditLog::change("Konto angelegt: {$data['name']} (".Permissions::label($data['role']).')');
 
         return $this->done();
@@ -47,7 +46,22 @@ class UserController extends Controller
             }
         }
         $user->update($data);
+        $this->ensureRefereeProfile($user);
 
         return $this->done();
+    }
+
+    /** Schiedsrichter-Konto ohne Vorbefüllung: Name und E-Mail kommen vom Konto, Standort trägt die Person selbst ein. */
+    private function ensureRefereeProfile(User $user): void
+    {
+        if ($user->role !== 'schiri' || $user->referee_id) {
+            return;
+        }
+        $referee = Referee::create([
+            'name' => $user->name,
+            'email' => $user->email,
+            'available' => true,
+        ]);
+        $user->update(['referee_id' => $referee->id]);
     }
 }

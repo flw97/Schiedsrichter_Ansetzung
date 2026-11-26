@@ -1,7 +1,7 @@
 <template>
   <div class="login">
     <section class="login-brand">
-      <img alt="Ansetzung" class="login-logo" src="/logo.png?v=3">
+      <img alt="Ansetzung" class="login-logo" src="/logo.svg?v=5">
       <h1>Ansetzung</h1>
       <p>Schiedsrichtereinsätze planen, abstimmen und nachverfolgen.</p>
     </section>

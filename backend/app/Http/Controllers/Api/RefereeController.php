@@ -29,6 +29,8 @@ class RefereeController extends Controller
     public function updateMe(Request $request): JsonResponse
     {
         $data = $request->validate([
+            'name' => 'sometimes|required|string|max:100',
+            'club' => 'nullable|string|max:150',
             'email' => 'nullable|email|max:150',
             'phone' => 'nullable|string|max:40',
             'address' => 'nullable|string|max:200',
@@ -40,6 +42,10 @@ class RefereeController extends Controller
         ]);
         $me = $this->me($request);
         $me->update(collect($data)->except('blackouts')->all());
+        $account = array_intersect_key($data, array_flip(['name', 'email']));
+        if ($account !== []) {
+            $request->user()->update($account);
+        }
         if (array_key_exists('blackouts', $data)) {
             $me->blackouts()->delete();
             $me->blackouts()->createMany($data['blackouts']);

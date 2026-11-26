@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1280" viewBox="0 0 1280 1280" role="img" aria-labelledby="title">
+  <title id="title">Ansetzung logo with three fanned referee cards</title>
+  <rect x="-240" y="-363" width="480" height="726" rx="50" fill="#FFBF00"
+        transform="translate(466 637) rotate(-19)"/>
+  <rect x="374" y="253" width="480" height="746" rx="50" fill="#080808"/>
+  <rect x="-240" y="-363" width="480" height="726" rx="50" fill="#EE2025"
+        transform="translate(785 650) rotate(19)"/>
+</svg>

@@ -3,7 +3,7 @@
     <LoginPage v-if="!restoring && !store.state" />
 
     <div v-else-if="restoring" class="restore">
-      <img alt="" src="/logo.png?v=3">
+      <img alt="" src="/logo.svg?v=5">
     </div>
 
     <template v-else-if="store.state">
@@ -16,7 +16,7 @@
         width="260"
       >
         <div class="brand">
-          <img alt="" class="brand-logo" src="/logo.png?v=3">
+          <img alt="" class="brand-logo" src="/logo.svg?v=5">
 
           <div>
             <div class="brand-name">Ansetzung</div>
@@ -101,13 +101,6 @@
         </div>
       </v-main>
     </template>
-
-    <v-snackbar-queue v-model="store.toasts" location="top right" :timeout="4500">
-      <template #text="{ item }">
-        <div v-if="item.push" class="text-overline opacity-60" style="line-height: 1.4">Push-Benachrichtigung</div>
-        {{ item.text }}
-      </template>
-    </v-snackbar-queue>
   </v-app>
 </template>
 

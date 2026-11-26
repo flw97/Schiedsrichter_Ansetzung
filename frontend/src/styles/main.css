@@ -7,6 +7,27 @@
   --mint: rgb(var(--v-theme-surface-variant, 231, 242, 236));
   --paper: rgb(var(--v-theme-background, 243, 247, 244));
   --surface: rgb(var(--v-theme-surface, 255, 255, 255));
+
+  /* vue3-toastify hängt am body, liest aber diese Variablen. Sie folgen dem Schema auf :root. */
+  --toastify-font-family: Inter, system-ui, sans-serif;
+  --toastify-color-light: var(--surface);
+  --toastify-color-dark: var(--surface);
+  --toastify-text-color-light: var(--ink);
+  --toastify-text-color-dark: var(--ink);
+  --toastify-color-info: rgb(var(--v-theme-info, 27, 67, 54));
+  --toastify-color-success: rgb(var(--v-theme-success, 45, 106, 79));
+  --toastify-color-warning: rgb(var(--v-theme-warning, 169, 120, 42));
+  --toastify-color-error: rgb(var(--v-theme-error, 194, 59, 50));
+  --toastify-icon-color-info: var(--toastify-color-info);
+  --toastify-icon-color-success: var(--toastify-color-success);
+  --toastify-icon-color-warning: var(--toastify-color-warning);
+  --toastify-icon-color-error: var(--toastify-color-error);
+  --toastify-color-progress-light: rgb(var(--v-theme-primary, 27, 67, 54));
+  --toastify-color-progress-dark: rgb(var(--v-theme-primary, 143, 203, 176));
+  --toastify-color-progress-info: var(--toastify-color-info);
+  --toastify-color-progress-success: var(--toastify-color-success);
+  --toastify-color-progress-warning: var(--toastify-color-warning);
+  --toastify-color-progress-error: var(--toastify-color-error);
 }
 
 .v-application {
@@ -52,4 +73,35 @@
 
 .v-application .v-btn {
   letter-spacing: 0;
+}
+
+.Toastify__toast.Toastify__toast-theme--light,
+.Toastify__toast.Toastify__toast-theme--dark {
+  font-family: Inter, system-ui, sans-serif;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(12, 22, 18, 0.14);
+}
+
+.Toastify__toast .Toastify__close-button {
+  color: var(--ink);
+  opacity: 0.5;
+}
+
+.Toastify__toast .Toastify__close-button:hover,
+.Toastify__toast .Toastify__close-button:focus {
+  opacity: 1;
+}
+
+.Toastify__toast .Toastify__progress-bar {
+  height: 3px;
+  opacity: 1;
+}
+
+@media only screen and (max-width: 480px) {
+  .Toastify__toast.Toastify__toast-theme--light,
+  .Toastify__toast.Toastify__toast-theme--dark {
+    border-radius: 0;
+    border-inline: 0;
+  }
 }

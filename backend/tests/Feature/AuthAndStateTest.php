@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\AuditLog;
+use App\Models\PushMessage;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 
@@ -56,6 +57,27 @@ class AuthAndStateTest extends ApiTestCase
         $this->assertTrue(AuditLog::where('text', 'like', '%Aktion abgelehnt — Berechtigung fehlt (ansetzen)%')->exists());
     }
 
+    public function test_notifications_are_only_newer_messages_of_the_current_user(): void
+    {
+        $me = $this->as('k.rehberg');
+        PushMessage::create(['user_id' => User::firstWhere('username', 's.weber')->id, 'text' => 'fremd']);
+        $older = PushMessage::create(['user_id' => $me->id, 'text' => 'älter']);
+        $newer = PushMessage::create(['user_id' => $me->id, 'text' => 'neu']);
+
+        $this->getJson('/api/notifications?after='.$older->id)
+            ->assertOk()
+            ->assertJsonCount(1, 'notifications')
+            ->assertJsonPath('notifications.0.id', $newer->id)
+            ->assertJsonPath('notifications.0.text', 'neu');
+        $this->getJson('/api/notifications?after='.$newer->id)->assertOk()->assertJsonCount(0, 'notifications');
+        $this->getJson('/api/notifications')->assertOk()->assertJsonMissing(['text' => 'fremd']);
+    }
+
+    public function test_notifications_require_authentication(): void
+    {
+        $this->getJson('/api/notifications')->assertUnauthorized();
+    }
+
     public function test_contact_reveal_is_logged(): void
     {
         $this->as('s.weber');
@@ -70,5 +92,34 @@ class AuthAndStateTest extends ApiTestCase
         $this->postJson('/api/users', ['name' => 'Neu', 'username' => 'Neu.Konto', 'password' => 'geheim123', 'role' => 'master'])->assertOk();
         $this->putJson("/api/users/{$master->id}", ['role' => 'admin'])->assertOk();
         $this->assertDatabaseHas('users', ['username' => 'neu.konto', 'role' => 'master']);
+        $this->assertNull(User::firstWhere('username', 'neu.konto')->referee_id);
+    }
+
+    public function test_referee_account_starts_empty_and_saves_own_profile(): void
+    {
+        $this->as('m.hartmann');
+        $this->postJson('/api/users', [
+            'name' => 'Anna Beispiel', 'username' => 'a.beispiel', 'email' => 'anna@example.de',
+            'password' => 'geheim123', 'role' => 'schiri',
+        ])->assertOk();
+
+        $user = User::firstWhere('username', 'a.beispiel');
+        $this->assertNotNull($user->referee_id);
+        $this->assertNull($user->referee->address);
+        $this->assertNull($user->referee->license);
+        $this->assertNull($user->referee->club);
+
+        $this->as('a.beispiel');
+        $this->putJson('/api/me/referee', [
+            'name' => 'Anna Beispiel-Neu', 'club' => 'TSV Gomaringen',
+            'address' => 'Hauptstraße 1, 72810 Gomaringen', 'phone' => '0171 000',
+            'email' => 'anna@example.de', 'available' => true,
+        ])->assertOk();
+
+        $user->refresh();
+        $this->assertSame('Anna Beispiel-Neu', $user->name);
+        $this->assertSame('Anna Beispiel-Neu', $user->referee->name);
+        $this->assertSame('TSV Gomaringen', $user->referee->club);
+        $this->assertSame('Hauptstraße 1, 72810 Gomaringen', $user->referee->address);
     }
 }

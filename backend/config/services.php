@@ -28,6 +28,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'nuliga' => [
+        'url' => env('NULIGA_API_URL', 'https://nuliga.badminton-gomaringen.de/api'),
+        'token' => env('NULIGA_TOKEN'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
