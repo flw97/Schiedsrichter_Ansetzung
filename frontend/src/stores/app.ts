@@ -4,7 +4,7 @@
 import type { AppState, Referee } from '@/types'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { api, ApiError, setUnauthorizedHandler, token } from '@/api'
+import { api, ApiError, SESSION_ENDED, setUnauthorizedHandler, token } from '@/api'
 import { abfrageStatus, isPast } from '@/domain/dates'
 import { indexResponses } from '@/domain/rules'
 import { notifyError, notifyPush, notifySuccess } from '@/notify'
@@ -17,9 +17,9 @@ const PUSH_DEDUP_MS = 4000
 export const useAppStore = defineStore('app', () => {
   const state = ref<AppState | null>(null)
   const busy = ref(false)
-  const sessionNote = ref('')
 
   let pollTimer: ReturnType<typeof setInterval> | undefined
+  let sessionEnded = false
   let pulling = false
   let primed = false
   let seenNotificationId = 0
@@ -35,13 +35,19 @@ export const useAppStore = defineStore('app', () => {
   const activeGames = computed(() => games.value.filter(g => g.imported && !isPast(g)))
   const abfrage = computed(() => abfrageStatus(state.value?.settings.abfrage_from ?? null, state.value?.settings.abfrage_to ?? null))
 
-  function clear (note = '') {
+  function clear () {
     stopPoll()
     token.set(null)
     state.value = null
-    sessionNote.value = note
   }
-  setUnauthorizedHandler(() => clear('Deine Sitzung ist abgelaufen. Bitte erneut anmelden.'))
+  setUnauthorizedHandler(() => {
+    if (sessionEnded) {
+      return
+    }
+    sessionEnded = true
+    clear()
+    notifyError(SESSION_ENDED)
+  })
 
   function noteSeen () {
     for (const notice of state.value?.pushes ?? []) {
@@ -128,18 +134,25 @@ export const useAppStore = defineStore('app', () => {
   }
 
   async function login (username: string, password: string) {
-    const res = await api.json<{ token: string, pushes: string[] }>('POST', '/login', { username, password })
-    token.set(res.token)
-    sessionNote.value = ''
+    const res = await api.json<{ token: string, refresh_token: string, expires_in: number, pushes: string[] }>('POST', '/login', { username, password })
+    sessionEnded = false
+    token.set(res.token, res.refresh_token, res.expires_in)
     await load()
     for (const text of res.pushes) {
       showPush(text)
     }
   }
 
-  async function logout (timeout = false) {
-    await api.json('POST', '/logout', { timeout }).catch(() => {})
-    clear(timeout ? 'Aus Sicherheitsgründen wurdest du nach 15 Minuten Inaktivität abgemeldet.' : '')
+  async function logout () {
+    const refresh = token.refresh()
+    if (refresh) {
+      await fetch('/api/logout', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refresh }),
+      }).catch(() => {})
+    }
+    clear()
   }
 
   /** Aktion ausführen: Erfolg und Fehler als Toast, verschickte Push-Mitteilungen ebenfalls. Lädt den Zustand neu. */
@@ -162,12 +175,14 @@ export const useAppStore = defineStore('app', () => {
       }
       return true
     } catch (error) {
-      notifyError(error instanceof ApiError ? error.message : 'Aktion fehlgeschlagen. Bitte erneut versuchen.')
+      if (!(error instanceof ApiError && error.message === SESSION_ENDED)) {
+        notifyError(error instanceof ApiError ? error.message : 'Aktion fehlgeschlagen. Bitte erneut versuchen.')
+      }
       return false
     } finally {
       busy.value = false
     }
   }
 
-  return { state, busy, sessionNote, can, referees, games, refById, refName, me, responses, activeGames, abfrage, load, login, logout, act }
+  return { state, busy, can, referees, games, refById, refName, me, responses, activeGames, abfrage, load, login, logout, act }
 })

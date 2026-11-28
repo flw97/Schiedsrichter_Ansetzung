@@ -7,7 +7,7 @@ export interface MapPoint { id: string, kind: 'ref' | 'hall' | 'hotel', lat: num
 export const GEO_PLACES: Record<string, [number, number]> = {
   'stuttgart': [48.7758, 9.1829], 'esslingen': [48.7406, 9.3051], 'esslingen am neckar': [48.7406, 9.3051], 'plochingen': [48.7125, 9.4189],
   'kirchheim': [48.6481, 9.4519], 'nürtingen': [48.6277, 9.3414], 'neckartenzlingen': [48.6217, 9.2653], 'reutlingen': [48.4914, 9.2043],
-  'metzingen': [48.5372, 9.2878], 'tübingen': [48.5216, 9.0576], 'gomaringen': [48.4528, 9.0958], 'rottenburg': [48.4765, 8.9347], 'herrenberg': [48.5949, 8.867],
+  'metzingen': [48.5372, 9.2878], 'mössingen': [48.4061, 9.0573], 'tübingen': [48.5216, 9.0576], 'gomaringen': [48.4528, 9.0958], 'rottenburg': [48.4765, 8.9347], 'herrenberg': [48.5949, 8.867],
   'böblingen': [48.6833, 9.0167], 'sindelfingen': [48.7133, 9.0027], 'leonberg': [48.7986, 9.0141], 'ludwigsburg': [48.8975, 9.192],
   'kornwestheim': [48.8586, 9.185], 'fellbach': [48.8089, 9.2759], 'waiblingen': [48.83, 9.3167], 'schorndorf': [48.8056, 9.5278],
   'filderstadt': [48.6575, 9.22], 'leinfelden-echterdingen': [48.6928, 9.1647], 'ostfildern': [48.7258, 9.2561], 'denkendorf': [48.7078, 9.3175],
@@ -23,7 +23,7 @@ export const GEO_PLACES: Record<string, [number, number]> = {
   'heilbronn': [49.1427, 9.2109], 'mosbach': [49.3528, 9.1486], 'künzelsau': [49.2813, 9.6903], 'schwäbisch hall': [49.1122, 9.7384],
   'crailsheim': [49.1366, 10.07], 'bad mergentheim': [49.4927, 9.7742], 'wertheim': [49.7596, 9.5167],
 }
-// Spielorte -> Ort bzw. Koordinaten
+// Hallen des Prototyps. Orte der aktuellen Ansetzung liest venuesOf aus Hallenname oder Heimmannschaft.
 export const VENUE_PLACE: Record<string, string | [number, number]> = {
   'Sporthalle Waldkirch': 'nürtingen', 'Halle am Steinbruch': 'esslingen', 'Sporthalle Fils': 'göppingen', 'Kreissporthalle Fils': 'göppingen',
   'Hohenstaufenhalle': [48.7196, 9.7119], 'Neckarhalle Neckartenzlingen': 'neckartenzlingen', 'Albhalle Reutlingen': 'reutlingen',
@@ -57,6 +57,31 @@ export function venueGeo (v: string): Geo | null {
   return p ? { lat: GEO_PLACES[p]![0], lon: GEO_PLACES[p]![1], ort: p, genau: 'Ortsmitte' } : geoOf(v)
 }
 
+/** Ort der Spiele in der Ansetzung: Hallenname, sonst der Ort im Namen der Heimmannschaft. */
+export function venuesOf (games: { venue: string, home_team?: string | null }[]): { venue: string, geo: Geo }[] {
+  const groups = new Map<string, { home_team?: string | null }[]>()
+  for (const game of games) {
+    groups.set(game.venue, [...(groups.get(game.venue) ?? []), game])
+  }
+  return [...groups].flatMap(([venue, rows]) => {
+    const geo = venueGeo(venue) ?? homeTown(rows)
+    return geo ? [{ venue, geo }] : []
+  }).toSorted((a, b) => a.venue.localeCompare(b.venue, 'de'))
+}
+
+function homeTown (rows: { home_team?: string | null }[]): Geo | null {
+  const counts = new Map<string, { geo: Geo, n: number }>()
+  for (const row of rows) {
+    const geo = geoOf(row.home_team)
+    const ort = geo?.ort
+    if (!geo || !ort) {
+      continue
+    }
+    counts.set(ort, { geo, n: (counts.get(ort)?.n ?? 0) + 1 })
+  }
+  return [...counts.values()].toSorted((a, b) => b.n - a.n)[0]?.geo ?? null
+}
+
 export function haversineKm (a: Geo, b: Geo) {
   const rad = (x: number) => (x * Math.PI) / 180
   const h = Math.sin(rad(b.lat - a.lat) / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(rad(b.lon - a.lon) / 2) ** 2
@@ -65,9 +90,9 @@ export function haversineKm (a: Geo, b: Geo) {
 
 /** Fahrstrecke genähert als Luftlinie × 1,25; unbekannte Orte zählen 20 km. */
 export const roadKm = (a: Geo, b: Geo) => Math.round(haversineKm(a, b) * 1.25)
-export function distKm (r: Parameters<typeof refGeo>[0], venue: string) {
+export function distKm (r: Parameters<typeof refGeo>[0], venue: string, home?: string | null) {
   const a = refGeo(r)
-  const v = venueGeo(venue)
+  const v = venueGeo(venue) ?? geoOf(home)
   return a && v ? roadKm(a, v) : 20
 }
 

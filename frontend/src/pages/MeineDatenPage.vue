@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-sm">
     <PageHeader title="Meine Daten">
-      Name, Verein, Telefon, E-Mail und Standort trägst du selbst ein. Lizenz und Perspektiv-Team pflegen die Admins.
+      Verein, Telefon, Verfügbarkeit und Sperrzeiten. Name und E-Mail liegen unter Benutzer, Lizenz und Standort im Kontomenü oben rechts.
     </PageHeader>
 
     <v-card class="pa-4 mb-4 d-flex ga-3">
@@ -26,11 +26,8 @@
       </div>
     </v-card>
 
-    <v-text-field v-model="form.name" class="mb-3" label="Name" />
     <v-text-field v-model="form.club" class="mb-3" label="Verein" />
-    <v-text-field v-model="form.email" class="mb-3" label="E-Mail" type="email" />
     <v-text-field v-model="form.phone" class="mb-3" label="Telefonnummer für Push-Mitteilungen" />
-    <v-text-field v-model="form.address" class="mb-3" label="Standort (Adresse für Karte und Entfernung, mit Ort)" />
     <v-switch v-model="form.available" class="mb-3" label="Ich bin für Einsätze verfügbar" />
     <v-btn color="primary" @click="save({ ...form, club: form.club || null }, 'Gespeichert.')">Speichern</v-btn>
 
@@ -63,11 +60,8 @@
   const store = useAppStore()
   const me = computed(() => store.me!)
   const form = reactive({
-    name: me.value.name,
     club: me.value.club ?? '',
-    email: me.value.email ?? '',
     phone: me.value.phone ?? '',
-    address: me.value.address ?? '',
     available: !!me.value.available,
   })
   const blackouts = computed(() => me.value.blackouts ?? [])

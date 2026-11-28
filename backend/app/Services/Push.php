@@ -8,7 +8,7 @@ use App\Models\User;
 
 /**
  * Push-Mitteilungen: werden beim Empfänger gespeichert (Glocke) und für die auslösende Person
- * als Bestätigung gesammelt. Der Versand an Mobilgeräte ist noch nicht angebunden.
+ * als Bestätigung gesammelt. Die E-Mail dazu verschickt der Cron-Endpunkt, nicht diese Anfrage.
  */
 class Push
 {

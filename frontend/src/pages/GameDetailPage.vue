@@ -177,7 +177,7 @@
   const scored = computed(() => {
     const g = game.value!
     return store.referees.map(r => {
-      const km = distKm(r, g.venue)
+      const km = distKm(r, g.venue, g.home_team)
       const response = responseOf(store.responses, g.id, r.id)
       return {
         ...r,

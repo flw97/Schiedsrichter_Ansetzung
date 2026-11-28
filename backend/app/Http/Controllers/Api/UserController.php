@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
-use App\Models\Referee;
 use App\Models\User;
 use App\Support\Permissions;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +24,9 @@ class UserController extends Controller
         ]);
         $data['username'] = mb_strtolower(trim($data['username']));
         $user = User::create($data);
-        $this->ensureRefereeProfile($user);
+        if ($user->role === 'schiri') {
+            $user->ensureReferee();
+        }
         AuditLog::change("Konto angelegt: {$data['name']} (".Permissions::label($data['role']).')');
 
         return $this->done();
@@ -42,26 +43,14 @@ class UserController extends Controller
         if (isset($data['active']) && $data['active'] !== $user->active) {
             AuditLog::change("Konto von {$user->name} ".($data['active'] ? 'aktiviert' : 'deaktiviert'));
             if (! $data['active']) {
-                $user->tokens()->delete();
+                $user->revokeSessions();
             }
         }
         $user->update($data);
-        $this->ensureRefereeProfile($user);
+        if ($user->role === 'schiri') {
+            $user->ensureReferee();
+        }
 
         return $this->done();
-    }
-
-    /** Schiedsrichter-Konto ohne Vorbefüllung: Name und E-Mail kommen vom Konto, Standort trägt die Person selbst ein. */
-    private function ensureRefereeProfile(User $user): void
-    {
-        if ($user->role !== 'schiri' || $user->referee_id) {
-            return;
-        }
-        $referee = Referee::create([
-            'name' => $user->name,
-            'email' => $user->email,
-            'available' => true,
-        ]);
-        $user->update(['referee_id' => $referee->id]);
     }
 }

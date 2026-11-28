@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-lg" style="max-width: 1100px">
-    <PageHeader subtitle="Interne Liste von Übernachtungsmöglichkeiten bei den Spielorten — mit Bewertungen und Kommentaren der Schiedsrichter." title="Unterkünfte" />
+    <PageHeader subtitle="Interne Liste von Übernachtungsmöglichkeiten bei der Ansetzung — mit Bewertungen und Kommentaren der Schiedsrichter." title="Unterkünfte" />
 
     <div class="gap-row mb-4">
       <v-text-field
@@ -11,7 +11,7 @@
         style="min-width: 200px"
       />
 
-      <v-select v-model="venue" aria-label="Spielort" :items="[{ title: 'Alle Spielorte', value: '' }, ...venues]" style="max-width: 260px" />
+      <v-select v-model="venue" aria-label="Ansetzung" :items="[{ title: 'Alle Ansetzungen', value: '' }, ...venues]" style="max-width: 260px" />
       <v-btn v-if="canPropose && !form" color="primary" @click="startForm()">Unterkunft eintragen</v-btn>
     </div>
 
@@ -23,7 +23,7 @@
         <v-text-field v-model="form.data.street" label="Straße und Nr." maxlength="80" style="min-width: 200px" />
         <v-text-field v-model="form.data.zip" label="PLZ" maxlength="10" style="max-width: 110px" />
         <v-text-field v-model="form.data.city" label="Ort *" maxlength="60" style="min-width: 160px" />
-        <v-select v-model="form.data.venue" :items="venues" label="Zugehöriger Spielort *" style="min-width: 220px" />
+        <v-select v-model="form.data.venue" :items="venues" label="Zugehörige Ansetzung *" style="min-width: 220px" />
       </div>
 
       <div class="gap-row mb-3">
@@ -46,7 +46,7 @@
         <v-card v-for="h in rows" :key="h.id" class="pa-4 mb-3" :style="sel === `u:${h.id}` ? 'border-color: rgb(var(--v-theme-primary))' : ''">
           <div class="text-body-1 font-weight-medium">{{ h.name }}</div>
           <div class="text-body-2 text-soft">{{ [h.street, `${h.zip ?? ''} ${h.city}`.trim()].filter(Boolean).join(', ') }}</div>
-          <div class="text-body-2 mt-1">Spielort: {{ h.venue }}{{ h.dist !== null ? ` · ${h.dist} km` : '' }}</div>
+          <div class="text-body-2 mt-1">Ansetzung: {{ h.venue }}{{ h.dist !== null ? ` · ${h.dist} km` : '' }}</div>
 
           <div class="text-body-2 mt-1">
             <template v-if="h.avg !== null"><span class="stars">{{ stars(h.avg) }}</span> {{ num(h.avg) }} ({{ h.reviews.length }})</template>
@@ -72,7 +72,7 @@
               size="small"
               target="_blank"
               variant="text"
-            >Route zum Spielort</v-btn>
+            >Route zur Ansetzung</v-btn>
 
             <v-btn
               v-if="h.geo"
@@ -152,7 +152,7 @@
 
       <div class="flex-grow-1" style="flex-basis: 340px; position: sticky; top: 64px">
         <GeoMap :points="points" :selected="sel" @select="sel = $event" />
-        <div class="text-caption text-soft mt-1">Karte: OpenStreetMap. Orange: Unterkünfte, blau: zugehörige Spielorte. Position = Ortsmitte bzw. eingetragene Koordinaten; Entfernung = Luftlinie × 1,25.</div>
+        <div class="text-caption text-soft mt-1">Karte: OpenStreetMap. Orange: Unterkünfte, blau: Ansetzung. Position = Ortsmitte bzw. eingetragene Koordinaten; Entfernung = Luftlinie × 1,25.</div>
       </div>
     </div>
   </div>
@@ -165,14 +165,15 @@
   import GeoMap from '@/components/GeoMap.vue'
   import PageHeader from '@/components/PageHeader.vue'
   import { num } from '@/domain/dates'
-  import { accommodationGeo, type MapPoint, roadKm, VENUE_PLACE, venueGeo } from '@/domain/geo'
+  import { accommodationGeo, type MapPoint, roadKm, venueGeo, venuesOf } from '@/domain/geo'
   import { useAppStore } from '@/stores/app'
 
   const store = useAppStore()
   const canManage = computed(() => store.can('unterkunft_verwalten'))
   const canPropose = computed(() => store.can('unterkunft_vorschlagen'))
   const items = computed(() => store.state!.accommodations)
-  const venues = computed(() => [...new Set([...Object.keys(VENUE_PLACE), ...store.activeGames.map(g => g.venue)])].filter(v => venueGeo(v)).toSorted((a, b) => a.localeCompare(b, 'de')))
+  const places = computed(() => venuesOf(store.activeGames))
+  const venues = computed(() => places.value.map(v => v.venue))
   const stars = (n: number) => '★★★★★'.slice(0, Math.round(n)) + '☆☆☆☆☆'.slice(0, 5 - Math.round(n))
   const q = ref('')
   const venue = ref('')
@@ -180,7 +181,7 @@
 
   const rows = computed(() => items.value.map(h => {
     const geo = accommodationGeo(h)
-    const vg = venueGeo(h.venue)
+    const vg = places.value.find(p => p.venue === h.venue)?.geo ?? venueGeo(h.venue)
     return { ...h, geo, vg, dist: geo && vg ? roadKm(geo, vg) : null, avg: h.reviews.length > 0 ? h.reviews.reduce((s, b) => s + b.stars, 0) / h.reviews.length : null }
   }).filter(h => (!venue.value || h.venue === venue.value) && (!q.value.trim() || `${h.name} ${h.city} ${h.street ?? ''} ${h.venue}`.toLowerCase().includes(q.value.trim().toLowerCase()))).toSorted((a, b) => a.venue.localeCompare(b.venue, 'de') || (a.dist ?? 999) - (b.dist ?? 999) || a.name.localeCompare(b.name, 'de')))
   const points = computed<MapPoint[]>(() => [

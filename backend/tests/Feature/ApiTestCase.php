@@ -6,7 +6,6 @@ use App\Models\Game;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 /** Feature-Tests gegen die Demo-Daten des Seeders. */
@@ -21,7 +20,8 @@ abstract class ApiTestCase extends TestCase
     protected function as(string $username): User
     {
         $user = User::firstWhere('username', $username);
-        Sanctum::actingAs($user);
+        unset($this->defaultHeaders['Authorization']);
+        $this->actingAs($user, 'api');
 
         return $user;
     }

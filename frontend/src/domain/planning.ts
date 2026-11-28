@@ -28,7 +28,7 @@ export interface PlanRow {
 export interface PerRef { ref: Referee, games: number, km: number, cost: number }
 export interface Plan { rows: PlanRow[], perRef: PerRef[], total: number, openCost: number, baseline: number, missing: number, ownClub: number }
 
-const tripCost = (r: Referee, g: Game) => distKm(r, g.venue) * 2 * KM_RATE // Hin- und Rückfahrt
+const tripCost = (r: Referee, g: Game) => distKm(r, g.venue, g.home_team) * 2 * KM_RATE // Hin- und Rückfahrt
 const clubOfTeam = (t?: string) => (t ?? '').replace(/\s+(?:[IVX]+|\d+)$/, '').trim()
 
 /**
@@ -235,7 +235,7 @@ export function evaluateRows (rows: Pick<PlanRow, 'game' | 'refs' | 'locked' | '
     ...row,
     leader: pickLeader(row.refs),
     cost: row.refs.reduce((s, r) => s + tripCost(r, row.game) / nShare(r, i), 0),
-    km: row.refs.reduce((s, r) => s + (distKm(r, row.game.venue) * 2) / nShare(r, i), 0),
+    km: row.refs.reduce((s, r) => s + (distKm(r, row.game.venue, row.game.home_team) * 2) / nShare(r, i), 0),
     doubles: row.refs.filter(r => nShare(r, i) > 1).map(r => r.name),
     conflicts: row.refs.filter(r => clubConflict(r, row.game)).map(r => r.name),
     missing: Math.max(0, SLOTS - row.refs.length),
@@ -245,7 +245,7 @@ export function evaluateRows (rows: Pick<PlanRow, 'game' | 'refs' | 'locked' | '
     return {
       ref: r,
       games: idx.length,
-      km: idx.reduce((s, i) => s + (distKm(r, out[i]!.game.venue) * 2) / nShare(r, i), 0),
+      km: idx.reduce((s, i) => s + (distKm(r, out[i]!.game.venue, out[i]!.game.home_team) * 2) / nShare(r, i), 0),
       cost: idx.reduce((s, i) => s + tripCost(r, out[i]!.game) / nShare(r, i), 0),
     }
   })

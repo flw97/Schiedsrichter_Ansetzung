@@ -85,7 +85,7 @@
 
   const SECURITY: [boolean, string][] = [
     [true, 'Anmeldung und Rechteprüfung serverseitig bei jeder Aktion (Laravel, Token je Sitzung); abgelehnte Aktionen werden protokolliert.'],
-    [true, 'Automatische Abmeldung nach 15 Minuten Inaktivität (Browser und Server).'],
+    [true, 'Kurzlebiges Zugangs-Token, das im Hintergrund erneuert wird. Die Abmeldung erfolgt, wenn die Erneuerung abgelehnt wird.'],
     [true, 'Kontaktdaten (Telefon, E-Mail) werden serverseitig maskiert; das Anzeigen in der Schiedsrichter-Liste wird protokolliert.'],
     [true, 'Zugriffsprotokoll für Anmeldungen, Abmeldungen, abgelehnte Aktionen und angezeigte Kontaktdaten.'],
     [true, 'Regelwerke: nur PDF (Dateikennung wird geprüft, max. 20 MB), Abruf nur angemeldet; schreiben dürfen nur Master-Admin und Admin.'],

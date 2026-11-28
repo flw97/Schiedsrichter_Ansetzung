@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Api\AccommodationController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CronController;
 use App\Http\Controllers\Api\GameController;
+use App\Http\Controllers\Api\GeoController;
+use App\Http\Controllers\Api\MeController;
 use App\Http\Controllers\Api\MiscController;
 use App\Http\Controllers\Api\MyGamesController;
 use App\Http\Controllers\Api\NuLigaController;
@@ -20,10 +23,19 @@ Route::get('/health', function () {
 });
 
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('throttle:30,1');
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('throttle:30,1');
+Route::post('/password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
+Route::post('/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1');
+Route::match(['get', 'post'], '/cron', CronController::class)->middleware('throttle:30,1');
 
 // Rechteprüfung bei jeder Aktion über Gates (siehe App\Support\Permissions)
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
+Route::middleware('auth:api')->group(function () {
+    Route::put('/me', [MeController::class, 'updateAccount']);
+    Route::put('/me/license', [MeController::class, 'updateLicense']);
+    Route::put('/me/standort', [MeController::class, 'updateStandort']);
+    Route::get('/geo/search', [GeoController::class, 'search'])->middleware('throttle:30,1');
+    Route::get('/geo/reverse', [GeoController::class, 'reverse'])->middleware('throttle:30,1');
     Route::get('/state', [StateController::class, 'show']);
     Route::get('/notifications', [StateController::class, 'notifications']);
     Route::post('/games/{game}/report', [MyGamesController::class, 'report']);

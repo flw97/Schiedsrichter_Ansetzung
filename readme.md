@@ -1,50 +1,27 @@
 # Schiedsrichter-Ansetzung
 
-Ein Tool, mit dem du vor einem Spieltag die Schiedsrichter-Ansetzungen planst und verwaltest – entwickelt für den **TSV Gomaringen**.
+Ansetzung von Badminton-Schiedsrichtern für Ligen und Turniere. Heute liegt der Fokus auf Begegnungen mit baden-württembergischer Beteiligung (2. Bundesliga, Regionalliga Süd-Ost) und Turnieren in BW; dieselbe Anwendung soll bundesweit nutzbar sein. Fachliche Regeln: [docs/domain.md](docs/domain.md).
 
-> **Status:** 🚧 In Entwicklung – das Projekt steht noch ganz am Anfang.
+> **Status:** In Entwicklung.
 
 ---
 
-## Motivation
+## Wofür
 
-Wer Schiedsrichter für einen Spieltag ansetzt, koordiniert oft per Excel-Liste, WhatsApp-Gruppe und Telefon. Dabei geht schnell der Überblick verloren:
+Die Einteilung läuft bisher über Excel: Spiele, Termine und Mannschaften, dazu eine verbindliche Rückmeldung der Schiedsrichter. Nach dem Rückmeldezeitraum veröffentlichen Admins die Saisonplanung. Die Anwendung ersetzt diesen Ablauf.
 
-- Welche Spiele haben noch keinen Schiedsrichter?
-- Wer ist am Wochenende verfügbar?
-- Wer hat in letzter Zeit viele oder wenige Spiele gepfiffen?
-- Wurden alle Beteiligten über ihre Ansetzung informiert?
-
-**Schiedsrichter-Ansetzung** bündelt diese Informationen an einem Ort und vereinfacht die Planung im Vorfeld eines Spieltags.
-
-## Geplante Funktionen
-
-### Spiele & Spieltage
-- Spieltage mit Datum, Uhrzeit, Spielort und Mannschaften anlegen
-- Spiele nach Altersklasse bzw. Liga kennzeichnen
-- Übersicht über offene, also noch nicht besetzte Spiele
-
-### Schiedsrichter
-- Schiedsrichter mit Kontaktdaten und Qualifikation verwalten (z. B. für welche Altersklassen sie pfeifen dürfen)
-- Verfügbarkeiten und Abwesenheiten erfassen
-- Einsatzhistorie und Einsatzstatistik pro Schiedsrichter
-
-### Ansetzung
-- Schiedsrichter (und ggf. Assistenten) einem Spiel zuordnen
-- Konflikte erkennen, z. B. Doppelbelegung, fehlende Qualifikation oder Nichtverfügbarkeit
-- Vorschläge für eine faire Verteilung der Einsätze
-- Status pro Ansetzung: *geplant*, *bestätigt*, *abgesagt*
-
-### Kommunikation & Export
-- Ansetzungsübersicht pro Spieltag als PDF oder Liste exportieren
-- Benachrichtigung der angesetzten Schiedsrichter (z. B. per E-Mail)
+- Zwei Schiedsrichter pro Ligaspiel; der lizenzhöhere ist verantwortlicher Leiter
+- Turniere zusätzlich mit einem Referee (Oberschiedsrichter)
+- Vorschlag nach Reisekosten, Lizenz, Verein und Einsatzzahl; insgesamt oder je Spiel übernehmbar
+- Rollen Lesend, Schiedsrichter und Admin; Lizenz nur durch Admins, Telefon und Wohnort durch die Schiedsrichter
+- Regelwerke, Unterkünfte, Statistik, Archiv, Filter, Lizenzen, Beobachtung, Push, Sperrzeiten
 
 ## Begriffe
 
 | Begriff        | Bedeutung                                                              |
 |----------------|------------------------------------------------------------------------|
 | **Spieltag**   | Ein Datum bzw. Wochenende mit einem oder mehreren Spielen              |
-| **Spiel**      | Eine Begegnung zweier Mannschaften mit Ort und Anstoßzeit              |
+| **Spiel**      | Eine Begegnung zweier Mannschaften mit Ort und Beginn                  |
 | **Ansetzung**  | Die Zuordnung eines Schiedsrichters zu einem Spiel                     |
 | **Verfügbarkeit** | Zeiträume, in denen ein Schiedsrichter eingesetzt werden kann bzw. nicht |
 
@@ -87,7 +64,8 @@ Tests: `docker compose exec backend php artisan test`, im Frontend `npm test`, `
 - [x] Konfliktprüfung
 - [ ] Anbindung NuLiga (Spielpläne über den Crawler; Lizenzen noch manuell)
 - [ ] Export der Ansetzungsübersicht
-- [ ] Benachrichtigungen (Push-Versand; aktuell nur in der App)
+- [x] Benachrichtigungen per E-Mail (Cron-Endpunkt; in der App weiterhin die Glocke)
+- [x] Passwort vergessen
 
 ## Mitwirken
 

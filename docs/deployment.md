@@ -28,4 +28,12 @@ Repository secrets (Settings → Secrets and variables → Actions):
 
 NuLiga sync needs `NULIGA_API_URL` (default `https://nuliga.badminton-gomaringen.de/api`) and `NULIGA_TOKEN` (operator bearer token) in that file. Without the token the demo schedule is used. The same pair lives in gitignored `backend/.env.local` for Docker.
 
+Notification and password-reset mail use Laravel mail: `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_SCHEME`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`. The default mailer is `log`, which does not deliver.
+
+`CRON_TOKEN` is a long random string. The hoster cron should call `https://ansetzung.badminton-gomaringen.de/api/cron?token=…` every five minutes (`X-Cron-Token` is the same secret without putting it in the query string). An empty token closes the endpoint. The response body is empty when nothing was sent. Password-reset mail is sent in the request, not by this cron.
+
+`FRONTEND_URL` is the origin in those links (the reset page `/passwort-zuruecksetzen`). It defaults to `APP_URL`; set `APP_URL=https://ansetzung.badminton-gomaringen.de`.
+
+`config:cache` during deploy reads `.env.production`. A value added after that stays invisible until the next deploy.
+
 `frontend/.env.production` stays in the repository. `npm run build` loads it (Vite production mode). Only variables whose names start with `VITE_` are included in the built JavaScript. It is not uploaded.

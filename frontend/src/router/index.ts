@@ -30,12 +30,24 @@ export const routes: (RouteRecordRaw & { path: string, meta: RouteMeta })[] = [
   { path: '/unterkuenfte', component: page('UnterkuenftePage'), meta: { perm: 'unterkunft_lesen', title: 'Unterkünfte', icon: 'mdi-bed-outline', nav: 'both' } },
   { path: '/standorte', component: page('StandortePage'), meta: { perm: 'einsehen', title: 'Standorte', icon: 'mdi-map-marker-outline', nav: 'admin' } },
   { path: '/meine-daten', component: page('MeineDatenPage'), meta: { perm: 'eigene', title: 'Meine Daten', icon: 'mdi-account-outline', nav: 'schiri' } },
+  { path: '/mein-benutzer', component: page('MeinBenutzerPage'), meta: { title: 'Benutzer' } },
+  { path: '/meine-lizenzen', component: page('MeineLizenzenPage'), meta: { title: 'Lizenz' } },
+  { path: '/mein-standort', component: page('MeinStandortPage'), meta: { title: 'Standort' } },
   { path: '/rollen', component: page('RollenPage'), meta: { perm: 'rollen', title: 'Rollen', icon: 'mdi-shield-check-outline', nav: 'admin' } },
 ]
 
+export function isPublicPath (path: string) {
+  return path === '/passwort-vergessen' || path === '/passwort-zuruecksetzen'
+}
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [...routes, { path: '/:pathMatch(.*)*', component: { render: () => null } }],
+  routes: [
+    ...routes,
+    { path: '/passwort-vergessen', component: page('PasswortVergessenPage') },
+    { path: '/passwort-zuruecksetzen', component: page('PasswortZuruecksetzenPage') },
+    { path: '/:pathMatch(.*)*', component: { render: () => null } },
+  ],
 })
 
 export default router

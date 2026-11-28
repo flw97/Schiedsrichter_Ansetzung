@@ -114,7 +114,7 @@ export interface Observation {
 export interface User { id: number, name: string, username: string, email: string | null, role: Role, active: boolean, referee_id: number | null }
 
 export interface AppState {
-  me: { id: number, name: string, username: string, role: Role, referee_id: number | null, permissions: string[] }
+  me: { id: number, name: string, username: string, email: string | null, role: Role, referee_id: number | null, permissions: string[] }
   referees: Referee[]
   games: Game[]
   responses: AvailabilityResponse[]

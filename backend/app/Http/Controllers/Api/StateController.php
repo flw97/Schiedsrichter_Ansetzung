@@ -32,7 +32,7 @@ class StateController extends Controller
         $meId = $user->referee_id;
 
         $state = [
-            'me' => [...$user->only(['id', 'name', 'username', 'role', 'referee_id']), 'permissions' => Permissions::of($user->role)],
+            'me' => [...$user->only(['id', 'name', 'username', 'email', 'role', 'referee_id']), 'permissions' => Permissions::of($user->role)],
             'referees' => Referee::with(['blackouts', 'proofs', 'user:id,referee_id'])->orderBy('name')->get()
                 ->map(fn (Referee $r) => $this->referee($r, $staff, $r->id === $meId)),
             'games' => Game::with('referees')->orderBy('date')->orderBy('time')->get()->map->toApi(),

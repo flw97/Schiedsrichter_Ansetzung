@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-lg">
-    <PageHeader subtitle="Wohnorte, die jede Person selbst unter Meine Daten einträgt, dazu Spielorte und Unterkünfte. Entfernungen sind Luftlinie × 1,25 als Näherung für die Fahrstrecke." title="Standorte" />
+    <PageHeader subtitle="Wohnorte, die jede Person selbst unter Meine Daten einträgt, dazu die Ansetzung und Unterkünfte. Entfernungen sind Luftlinie × 1,25 als Näherung für die Fahrstrecke." title="Standorte" />
 
     <div class="gap-row mb-2" style="gap: 16px">
       <v-checkbox
@@ -20,7 +20,7 @@
     <v-card v-if="selected" class="pa-4 mt-3">
       <div class="text-body-1 font-weight-medium">{{ selected.label }}</div>
       <div class="text-body-2 text-soft">{{ selected.sub }} · Position: {{ selected.genau }}</div>
-      <div v-if="nearest.length > 0" class="text-body-2 mt-1">Nächste Spielorte: {{ nearest.map(n => `${n.p.label} (${n.d} km)`).join(' · ') }}</div>
+      <div v-if="nearest.length > 0" class="text-body-2 mt-1">Nächste Ansetzungen: {{ nearest.map(n => `${n.p.label} (${n.d} km)`).join(' · ') }}</div>
       <a class="text-body-2 text-primary" :href="osmLink(selected)" rel="noopener noreferrer" target="_blank">In OpenStreetMap öffnen</a>
     </v-card>
 
@@ -54,10 +54,10 @@
   import { computed, ref } from 'vue'
   import GeoMap from '@/components/GeoMap.vue'
   import PageHeader from '@/components/PageHeader.vue'
-  import { accommodationGeo, type Geo, type MapPoint, osmLink, refGeo, roadKm, venueGeo } from '@/domain/geo'
+  import { accommodationGeo, type Geo, type MapPoint, osmLink, refGeo, roadKm, venuesOf } from '@/domain/geo'
   import { useAppStore } from '@/stores/app'
 
-  const LAYERS = [{ kind: 'ref', label: 'Schiedsrichter', color: '#2F6B4F' }, { kind: 'hall', label: 'Spielorte', color: '#2A5A9E' }, { kind: 'hotel', label: 'Unterkünfte', color: '#D9822B' }] as const
+  const LAYERS = [{ kind: 'ref', label: 'Schiedsrichter', color: '#2F6B4F' }, { kind: 'hall', label: 'Ansetzung', color: '#2A5A9E' }, { kind: 'hotel', label: 'Unterkünfte', color: '#D9822B' }] as const
   const store = useAppStore()
   const layers = ref<string[]>(['ref', 'hall', 'hotel'])
   const sel = ref<string | null>(null)
@@ -66,7 +66,7 @@
   const point = (id: string, kind: MapPoint['kind'], g: Geo | null, label: string, sub: string): Point[] => (g ? [{ id, kind, lat: g.lat, lon: g.lon, label, sub, genau: g.genau }] : [])
   const all = computed(() => [
     ...store.referees.flatMap(r => point(`r${r.id}`, 'ref', refGeo(r), r.name, r.address ?? '')),
-    ...[...new Set(store.games.map(g => g.venue))].flatMap(v => point(`h:${v}`, 'hall', venueGeo(v), v, 'Spielort')),
+    ...venuesOf(store.activeGames).flatMap(v => point(`h:${v.venue}`, 'hall', v.geo, v.venue, 'Ansetzung')),
     ...store.state!.accommodations.flatMap(a => point(`u:${a.id}`, 'hotel', accommodationGeo(a), a.name, `${a.street ?? ''}, ${a.zip ?? ''} ${a.city}`)),
   ])
   const selected = computed(() => all.value.find(p => p.id === sel.value) ?? null)

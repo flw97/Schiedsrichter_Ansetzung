@@ -1,5 +1,5 @@
 <template>
-  <div ref="el" class="geo-map" :style="{ height: `${height ?? 520}px` }" />
+  <div ref="el" class="geo-map" :class="{ pickable }" :style="{ height: `${height ?? 520}px` }" />
 </template>
 
 <script lang="ts" setup>
@@ -9,8 +9,8 @@
   import 'leaflet/dist/leaflet.css'
 
   // OpenStreetMap-Karte mit Schiedsrichtern (grün), Spielorten (blau, eckig) und Unterkünften (orange)
-  const props = defineProps<{ points: MapPoint[], selected?: string | null, height?: number }>()
-  const emit = defineEmits<{ select: [id: string] }>()
+  const props = defineProps<{ points: MapPoint[], selected?: string | null, height?: number, pickable?: boolean }>()
+  const emit = defineEmits<{ select: [id: string], pick: [at: { lat: number, lon: number }] }>()
   const COLORS = { ref: '#2F6B4F', hall: '#2A5A9E', hotel: '#D9822B' }
   const BW_CENTER: L.LatLngExpression = [48.6, 9]
 
@@ -26,9 +26,16 @@
       iconSize: [size, size],
       html: `<span class="geo-pin${p.kind === 'hall' ? ' square' : ''}${sel ? ' selected' : ''}" style="background:${COLORS[p.kind]}"></span>`,
     })
-    return L.marker([p.lat, p.lon], { icon, title: p.label, zIndexOffset: sel ? 1000 : 0 })
+    const pin = L.marker([p.lat, p.lon], { icon, title: p.label, zIndexOffset: sel ? 1000 : 0, draggable: props.pickable })
       .bindTooltip(p.label, { permanent: sel, direction: 'right', offset: [size / 2, 0] })
       .on('click', () => emit('select', p.id))
+    if (props.pickable) {
+      pin.on('dragend', () => {
+        const at = pin.getLatLng()
+        emit('pick', { lat: at.lat, lon: at.lng })
+      })
+    }
+    return pin
   }
 
   function draw () {
@@ -46,7 +53,19 @@
       map.setView(BW_CENTER, 8)
       return
     }
-    map.fitBounds(L.latLngBounds(props.points.map(p => [p.lat, p.lon])), { padding: [40, 40], maxZoom: 13 })
+    map.fitBounds(L.latLngBounds(props.points.map(p => [p.lat, p.lon])), { padding: [40, 40], maxZoom: props.pickable ? 16 : 13 })
+  }
+
+  let seenIds = ''
+
+  function follow () {
+    const p = props.points[0]
+    if (!map || !props.pickable || props.points.length !== 1 || !p) {
+      return
+    }
+    if (!map.getBounds().pad(-0.05).contains([p.lat, p.lon])) {
+      map.panTo([p.lat, p.lon])
+    }
   }
 
   onMounted(() => {
@@ -55,16 +74,27 @@
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-Mitwirkende',
     }).addTo(map)
+    if (props.pickable) {
+      map.on('click', (event: L.LeafletMouseEvent) => emit('pick', { lat: event.latlng.lat, lon: event.latlng.lng }))
+    }
     layer = L.layerGroup().addTo(map)
     draw()
     fit()
+    seenIds = props.points.map(p => p.id).join('|')
   })
   onBeforeUnmount(() => map?.remove())
 
-  // Neue Punktmenge: neu zeichnen und Ausschnitt anpassen; Auswahl: nur neu zeichnen und hinschwenken
-  watch(() => props.points.map(p => p.id).join('|'), () => {
+  // Neue Punkte: Ausschnitt anpassen. Nur verschobene Markierung: zeichnen und bei Bedarf hinschwenken.
+  watch(() => props.points.map(p => `${p.id}:${p.lat}:${p.lon}`).join('|'), () => {
+    const ids = props.points.map(p => p.id).join('|')
+    const refit = ids !== seenIds
+    seenIds = ids
     draw()
-    fit()
+    if (refit) {
+      fit()
+    } else {
+      follow()
+    }
   })
   watch(() => props.selected, id => {
     draw()
@@ -77,6 +107,8 @@
 
 <style scoped>
 .geo-map { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; z-index: 0; }
+.geo-map.pickable,
+.geo-map.pickable :deep(.leaflet-grab) { cursor: crosshair; }
 .geo-map :deep(.geo-pin) { display: block; width: 100%; height: 100%; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
 .geo-map :deep(.geo-pin.square) { border-radius: 2px; }
 .geo-map :deep(.geo-pin.selected) { outline: 3px solid rgba(27, 36, 31, 0.35); }

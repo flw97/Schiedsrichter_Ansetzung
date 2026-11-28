@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Auth\JwtGuard;
 use App\Models\AuditLog;
 use App\Models\User;
 use App\Services\CrawlerNuLigaClient;
@@ -9,16 +10,12 @@ use App\Services\NuLigaClient;
 use App\Services\NuLigaFeed;
 use App\Services\Push;
 use App\Support\Permissions;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use Laravel\Sanctum\PersonalAccessToken;
-use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /** Automatische Abmeldung nach Inaktivität. */
-    public const IDLE_MINUTES = 15;
-
     public function register(): void
     {
         // Je Anfrage gesammelte Push-Mitteilungen
@@ -45,7 +42,6 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
-        Sanctum::authenticateAccessTokensUsing(fn (PersonalAccessToken $token, bool $valid) => $valid
-            && ($token->last_used_at ?? $token->created_at)->gt(now()->subMinutes(self::IDLE_MINUTES)));
+        Auth::extend('jwt', fn ($app, $name, $config) => new JwtGuard);
     }
 }

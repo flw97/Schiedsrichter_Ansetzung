@@ -30,5 +30,6 @@
         <server name="TELESCOPE_ENABLED" value="false" force="true"/>
         <server name="NIGHTWATCH_ENABLED" value="false" force="true"/>
         <server name="NULIGA_TOKEN" value="" force="true"/>
+        <server name="CRON_TOKEN" value="" force="true"/>
     </php>
 </phpunit>

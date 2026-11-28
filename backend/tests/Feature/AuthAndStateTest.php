@@ -5,13 +5,16 @@ namespace Tests\Feature;
 use App\Models\AuditLog;
 use App\Models\PushMessage;
 use App\Models\User;
+use App\Services\AuthTokens;
 use Database\Seeders\DatabaseSeeder;
 
 class AuthAndStateTest extends ApiTestCase
 {
     public function test_login_returns_token_and_rejects_wrong_password_and_inactive_accounts(): void
     {
-        $this->postJson('/api/login', ['username' => 'S.Weber', 'password' => DatabaseSeeder::PASSWORD])->assertOk()->assertJsonStructure(['token', 'pushes']);
+        $this->postJson('/api/login', ['username' => 'S.Weber', 'password' => DatabaseSeeder::PASSWORD])
+            ->assertOk()
+            ->assertJsonStructure(['token', 'refresh_token', 'expires_in', 'pushes']);
         $this->postJson('/api/login', ['username' => 's.weber', 'password' => 'falsch'])->assertStatus(422);
 
         User::firstWhere('username', 't.lang')->update(['active' => false]);
@@ -19,14 +22,42 @@ class AuthAndStateTest extends ApiTestCase
         $this->assertDatabaseHas('audit_logs', ['text' => 'Thomas Lang (Lesend): Anmeldung abgelehnt (Konto deaktiviert)']);
     }
 
-    public function test_token_expires_after_inactivity(): void
+    public function test_refresh_keeps_the_session_after_the_access_token_expires(): void
     {
-        $token = $this->postJson('/api/login', ['username' => 's.weber', 'password' => DatabaseSeeder::PASSWORD])->json('token');
-        $this->withToken($token)->getJson('/api/state')->assertOk();
+        $login = $this->postJson('/api/login', ['username' => 's.weber', 'password' => DatabaseSeeder::PASSWORD])->assertOk();
+        $access = $login->json('token');
+        $refresh = $login->json('refresh_token');
+        $this->withToken($access)->getJson('/api/state')->assertOk();
 
-        $this->travel(16)->minutes();
-        $this->app['auth']->forgetGuards();
-        $this->withToken($token)->getJson('/api/state')->assertUnauthorized();
+        $this->travel($login->json('expires_in') + 5)->seconds();
+        $this->withToken($access)->getJson('/api/state')->assertUnauthorized();
+
+        $next = $this->postJson('/api/refresh', ['refresh_token' => $refresh])->assertOk();
+        $this->withToken($next->json('token'))->getJson('/api/state')->assertOk();
+        $this->postJson('/api/refresh', ['refresh_token' => $refresh])->assertUnauthorized();
+
+        $this->postJson('/api/logout', ['refresh_token' => $next->json('refresh_token')])->assertOk();
+        $this->postJson('/api/refresh', ['refresh_token' => $next->json('refresh_token')])->assertUnauthorized();
+        $this->assertDatabaseHas('audit_logs', ['text' => 'Sabine Weber (Admin): Abmeldung']);
+    }
+
+    public function test_expired_refresh_token_and_deactivation_end_the_session(): void
+    {
+        $login = $this->postJson('/api/login', ['username' => 's.weber', 'password' => DatabaseSeeder::PASSWORD])->assertOk();
+        $this->travel(AuthTokens::REFRESH_DAYS - 1)->days();
+        $this->postJson('/api/refresh', ['refresh_token' => $login->json('refresh_token')])->assertOk();
+
+        $aging = $this->postJson('/api/login', ['username' => 's.weber', 'password' => DatabaseSeeder::PASSWORD])->assertOk();
+        $this->travel(AuthTokens::REFRESH_DAYS)->days();
+        $this->travel(1)->minutes();
+        $this->postJson('/api/refresh', ['refresh_token' => $aging->json('refresh_token')])->assertUnauthorized();
+
+        $again = $this->postJson('/api/login', ['username' => 's.weber', 'password' => DatabaseSeeder::PASSWORD])->assertOk();
+        $this->as('m.hartmann');
+        $weber = User::firstWhere('username', 's.weber');
+        $this->putJson("/api/users/{$weber->id}", ['active' => false])->assertOk();
+        $this->withToken($again->json('token'))->getJson('/api/state')->assertUnauthorized();
+        $this->postJson('/api/refresh', ['refresh_token' => $again->json('refresh_token')])->assertUnauthorized();
     }
 
     public function test_state_is_filtered_by_role(): void

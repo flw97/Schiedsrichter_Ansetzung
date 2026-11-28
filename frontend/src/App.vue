@@ -1,6 +1,8 @@
 <template>
   <v-app>
-    <LoginPage v-if="!restoring && !store.state" />
+    <router-view v-if="isPublic" />
+
+    <LoginPage v-else-if="!restoring && !store.state" />
 
     <div v-else-if="restoring" class="restore">
       <img alt="" src="/logo.svg?v=5">
@@ -41,14 +43,6 @@
             </v-list-item>
           </v-list>
         </div>
-
-        <template #append>
-          <div class="nav-foot">
-            <v-list density="compact" nav>
-              <v-list-item prepend-icon="mdi-logout" title="Abmelden" @click="store.logout()" />
-            </v-list>
-          </div>
-        </template>
       </v-navigation-drawer>
 
       <v-app-bar
@@ -86,13 +80,31 @@
           </v-card>
         </v-menu>
 
-        <div class="user">
-          <v-avatar color="primary" size="32">
-            <span class="user-initials">{{ initials }}</span>
-          </v-avatar>
+        <v-menu location="bottom end">
+          <template #activator="{ props }">
+            <button aria-label="Konto" class="user" type="button" v-bind="props">
+              <v-avatar color="primary" size="32">
+                <span class="user-initials">{{ initials }}</span>
+              </v-avatar>
 
-          <span class="user-name">{{ store.state.me.name }}</span>
-        </div>
+              <span class="user-name">{{ store.state.me.name }}</span>
+              <v-icon class="user-chevron" icon="mdi-chevron-down" size="18" />
+            </button>
+          </template>
+
+          <v-list class="user-menu" density="compact">
+            <v-list-item
+              v-for="item in accountItems"
+              :key="item.to"
+              :prepend-icon="item.icon"
+              :title="item.title"
+              :to="item.to"
+            />
+
+            <v-divider v-if="accountItems.length > 0" class="my-1" />
+            <v-list-item prepend-icon="mdi-logout" title="Abmelden" @click="store.logout()" />
+          </v-list>
+        </v-menu>
       </v-app-bar>
 
       <v-main>
@@ -105,7 +117,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onBeforeUnmount, ref, watch } from 'vue'
+  import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useDisplay } from 'vuetify'
   import { token } from '@/api'
@@ -113,7 +125,7 @@
   import { fmtDateTime, isPast } from '@/domain/dates'
   import { classify, ROLE_LABEL } from '@/domain/rules'
   import LoginPage from '@/pages/LoginPage.vue'
-  import { routes } from '@/router'
+  import { isPublicPath, routes } from '@/router'
   import { useAppStore } from '@/stores/app'
   import { useThemeChoice } from '@/theme'
 
@@ -122,6 +134,7 @@
   const store = useAppStore()
   const route = useRoute()
   const router = useRouter()
+  const isPublic = computed(() => isPublicPath(route.path))
   const { mdAndUp } = useDisplay()
   const navOpen = ref(true)
 
@@ -134,6 +147,11 @@
     return routes.filter(r => (r.meta.nav === side || r.meta.nav === 'both') && allowed(r))
   })
   const pushes = computed(() => store.state?.pushes ?? [])
+  const accountItems = [
+    { title: 'Benutzer', icon: 'mdi-account-outline', to: '/mein-benutzer' },
+    { title: 'Lizenz', icon: 'mdi-medal-outline', to: '/meine-lizenzen' },
+    { title: 'Standort', icon: 'mdi-map-marker-outline', to: '/mein-standort' },
+  ]
 
   const NAV_GROUPS = {
     admin: [
@@ -190,6 +208,9 @@
   // Unbekannte oder nicht erlaubte Seiten führen zur ersten Seite der Navigation
   watch([() => route.path, nav], async () => {
     await router.isReady()
+    if (isPublicPath(route.path)) {
+      return
+    }
     const match = routes.find(r => route.matched[0]?.path === r.path)
     if (store.state && (!match || !allowed(match))) {
       await router.replace(nav.value[0]?.path ?? '/')
@@ -205,24 +226,9 @@
     }
   })
 
-  // Automatische Abmeldung nach 15 Minuten Inaktivität
-  const IDLE_MS = 15 * 60 * 1000
-  const EVENTS = ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'] as const
-  let timer: ReturnType<typeof setTimeout> | undefined
-  function reset () {
-    clearTimeout(timer)
-    timer = setTimeout(() => store.logout(true), IDLE_MS)
-  }
-  watch(() => !!store.state, loggedIn => {
-    for (const e of EVENTS) {
-      (loggedIn ? window.addEventListener : window.removeEventListener)(e, reset, { passive: true } as AddEventListenerOptions)
-    }
-    loggedIn ? reset() : clearTimeout(timer)
-  })
-  onBeforeUnmount(() => clearTimeout(timer))
-
   // Bestehende Sitzung übernehmen, ohne das Anmeldeformular zu zeigen, bis /state geantwortet hat.
-  const restoring = ref(token.get() !== null)
+  // Ein abgelaufenes Zugangs-Token wird dabei über das Refresh-Token erneuert.
+  const restoring = ref(token.get() !== null || token.refresh() !== null)
   if (restoring.value) {
     store.load().finally(() => {
       restoring.value = false
@@ -277,7 +283,6 @@
 .app-nav :deep(.v-list-item--active .v-list-item-title) { font-weight: 600; color: #fff; }
 .app-nav :deep(.v-list-item:not(.v-list-item--active):hover) { background: rgba(255, 255, 255, 0.08); }
 .nav-badge { background: #fff !important; color: var(--green) !important; }
-.nav-foot { border-top: 1px solid rgba(255, 255, 255, 0.16); margin-top: 8px; padding: 8px 0; }
 
 .app-bar { border-bottom: 1px solid var(--line) !important; background: var(--surface) !important; }
 .user {
@@ -285,13 +290,20 @@
   align-items: center;
   gap: 10px;
   margin: 0 16px 0 8px;
-  padding: 4px 12px 4px 4px;
+  padding: 4px 10px 4px 4px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
 }
+.user:hover,
+.user:focus-visible { background: var(--paper); }
 .user-initials { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.03em; color: rgb(var(--v-theme-on-primary)); }
 .user-name { font-size: 0.875rem; font-weight: 500; color: var(--ink); }
+.user-chevron { color: var(--ink-soft); }
+.user-menu { min-width: 180px; }
 
 .page-shell {
   max-width: 1180px;

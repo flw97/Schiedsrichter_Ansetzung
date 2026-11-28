@@ -9,6 +9,7 @@
 - `Changelog/` - Keep a Changelog entries, one file per change
 
 ## Notes
+- [Domain](./domain.md): product scope (BW today, usable nationwide), season planning, tournaments, suitability ranking, roles and the extra functions
 - [Local dev environment](./dev-environment.md): how the Docker dev setup, hot reload and API proxy work
-- [App architecture](./app-architecture.md): data model, API/state flow, permissions, frontend domain modules and gotchas of the prototype port
+- [App architecture](./app-architecture.md): data model, API/state flow, permissions, notification mail, password reset, frontend domain modules and gotchas of the prototype port
 - [Deployment](./deployment.md): Netcup webspace via FTPS. Releases are zip archives (not a per-file mirror) plus the required GitHub Actions secrets
